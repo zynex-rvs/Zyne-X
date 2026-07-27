@@ -250,7 +250,7 @@ export default function Home() {
     const { data: existing } = await supabase.from("users").select("regNo").eq("regNo", data.regNo.toUpperCase()).single();
     if (existing) {
       addToast("This Register Number is already registered.", "error");
-      return;
+      return false;
     }
 
     const newUser = {
@@ -269,7 +269,7 @@ export default function Home() {
     if (error) {
        addToast("Failed to create account.", "error");
        console.error(error);
-       return;
+       return false;
     }
 
     setUsers([...users, insertedUser]);
@@ -278,6 +278,7 @@ export default function Home() {
     setActiveModal(null);
     addToast(`Account created successfully!`, "success");
     setViewMode("user-dashboard");
+    return true;
   };
 
   const handleAdminLogin = async (id: string, pass: string) => {

@@ -131,9 +131,9 @@ export default function Hero({ onJoinClick, onExploreClick }: HeroProps) {
       </div>
 
       <div className={styles.caption}>
-        <div className="flex flex-col items-center gap-1 mb-6">
-          <p className={styles.tagline}>DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE</p>
-          <p className={styles.tagline}>DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING</p>
+        <div className="flex flex-col items-center gap-1 mb-6 text-center">
+          <p className={styles.tagline}>DEPARTMENT OF</p>
+          <p className={styles.tagline}>AI & DS | AI & ML</p>
         </div>
         <div className={styles.actions}>
           <Button onClick={onJoinClick}>

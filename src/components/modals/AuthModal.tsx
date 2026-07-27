@@ -33,7 +33,7 @@ interface AuthModalProps {
   activeModal: string | null;
   onClose: () => void;
   onLogin: (regNo: string, pass: string) => void;
-  onSignup: (data: any) => void;
+  onSignup: (data: any) => Promise<boolean | void> | void;
   setActiveModal: (modal: string | null) => void;
 }
 
@@ -116,9 +116,17 @@ export default function AuthModal({
       const result = await res.json();
 
       if (res.ok) {
-        onSignup(signupData);
-        setOtpCode("");
-        setSignupData(null);
+        // Await onSignup so we can know if it succeeded
+        const success = await onSignup(signupData);
+        
+        if (success !== false) {
+          // If it succeeded (or returned void which implies success)
+          setOtpCode("");
+          setSignupData(null);
+        } else {
+          // If it failed (e.g. duplicate user), send them back to the form
+          setActiveModal("signup");
+        }
       } else {
         alert(result.error || "Invalid verification code.");
       }
