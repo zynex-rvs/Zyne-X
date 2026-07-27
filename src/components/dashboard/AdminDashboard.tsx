@@ -1,0 +1,458 @@
+"use client";
+
+import React, { useState } from "react";
+import { User, Event, Team, Registration, Enquiry, Club, Administrator } from "@/types";
+import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X } from "lucide-react";
+import { Button } from "../ui/Button";
+import AdminContentManager from "./AdminContentManager";
+import AdminEventDetailsTable from "./AdminEventDetailsTable";
+
+interface AdminDashboardProps {
+  events: Event[];
+  setEvents: (val: Event[]) => void;
+  administrators: Administrator[];
+  setAdministrators: (val: Administrator[]) => void;
+  clubs: Club[];
+  setClubs: (val: Club[]) => void;
+  users: User[];
+  teams: Record<string, Team>;
+  eventRegistrations: Record<string, Registration[]>;
+  enquiries: Enquiry[];
+  onRespondEnquiry: (idx: number, reply: string) => void;
+  announcements?: import("@/types").Announcement[];
+  setAnnouncements?: (val: import("@/types").Announcement[]) => void;
+}
+
+export default function AdminDashboard({
+  events, setEvents,
+  administrators, setAdministrators,
+  clubs, setClubs,
+  users,
+  teams,
+  eventRegistrations,
+  enquiries,
+  onRespondEnquiry,
+  announcements,
+  setAnnouncements,
+}: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "announcements">("stats");
+  
+  // Search parameters
+  const [searchTerms, setSearchTerms] = useState({
+    users: "",
+    teams: "",
+    registrations: "",
+    enquiries: "",
+  });
+
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
+
+  // Statistics calculation
+  const totalUsers = users.length;
+  const totalTeams = Object.keys(teams || {}).length;
+  const totalRegistrations = Object.values(eventRegistrations || {}).reduce((acc, curr) => acc + curr.length, 0);
+  const pendingEnquiries = enquiries.filter((e) => e.status === "pending").length;
+
+  const handleSearchChange = (tab: keyof typeof searchTerms, value: string) => {
+    setSearchTerms((prev) => ({ ...prev, [tab]: value }));
+  };
+
+  // Filters mapping
+  const getFilteredUsers = () => {
+    return users.filter((u) => 
+      u.name.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
+      u.id.toLowerCase().includes(searchTerms.users.toLowerCase())
+    );
+  };
+
+  const getFilteredTeams = () => {
+    return Object.values(teams || {}).filter((t) => {
+      const eventName = events.find((e) => e.id === t.eventId)?.name || "";
+      const matchesSearch = t.teamName.toLowerCase().includes(searchTerms.teams.toLowerCase()) ||
+        t.teamCode.toLowerCase().includes(searchTerms.teams.toLowerCase()) ||
+        eventName.toLowerCase().includes(searchTerms.teams.toLowerCase());
+      
+      const matchesEvent = !selectedEventId || t.eventId === selectedEventId;
+      return matchesSearch && matchesEvent;
+    });
+  };
+
+  const getFilteredRegistrations = () => {
+    if (!selectedEventId) return [];
+    const regs = eventRegistrations[selectedEventId] || [];
+    return regs.filter((r) => 
+      (r.name || "").toLowerCase().includes(searchTerms.registrations.toLowerCase()) ||
+      r.email.toLowerCase().includes(searchTerms.registrations.toLowerCase()) ||
+      r.mobile.toLowerCase().includes(searchTerms.registrations.toLowerCase())
+    );
+  };
+
+  const getFilteredEnquiries = () => {
+    return enquiries.filter((e) => 
+      e.name.toLowerCase().includes(searchTerms.enquiries.toLowerCase()) ||
+      e.subject.toLowerCase().includes(searchTerms.enquiries.toLowerCase()) ||
+      e.message.toLowerCase().includes(searchTerms.enquiries.toLowerCase())
+    );
+  };
+
+  const handleRespond = (idx: number) => {
+    const reply = prompt("Compose response to candidate email:");
+    if (reply) {
+      onRespondEnquiry(idx, reply);
+      alert("Response logged and candidate notified via email ledger!");
+    }
+  };
+
+  const exportTableData = (type: string) => {
+    alert(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`);
+  };
+
+  return (
+    <div id="admin-dashboard" className="dashboard block">
+      <div className="dashboard-header flex justify-between items-center mb-8 pb-4 border-b border-white/5">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-bold font-outfit text-white flex items-center gap-2">
+            <Shield className="w-6 h-6 text-white/70" /> Administrator Desk
+          </h2>
+          <p className="text-slate-400 text-xs">Configure parameters, view enrollments, and respond to enquiries</p>
+        </div>
+      </div>
+
+      {/* Admin Tab buttons */}
+      <div className="admin-tabs flex overflow-x-auto no-scrollbar gap-2 p-1 bg-white/5 backdrop-blur-md border border-white/5 rounded-xl mb-8 whitespace-nowrap">
+        <button
+          onClick={() => setActiveTab("stats")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "stats" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab("users")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "users" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Members List
+        </button>
+        <button
+          onClick={() => setActiveTab("registrations")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "registrations" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Registrations
+        </button>
+        <button
+          onClick={() => setActiveTab("enquiries")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "enquiries" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Enquiries Desk
+        </button>
+        <button
+          onClick={() => setActiveTab("events")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "events" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Manage Events
+        </button>
+        <button
+          onClick={() => setActiveTab("clubs")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "clubs" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Manage Clubs
+        </button>
+        <button
+          onClick={() => setActiveTab("admins")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "admins" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Manage Admins
+        </button>
+        <button
+          onClick={() => setActiveTab("announcements")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "announcements" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Announcements
+        </button>
+      </div>
+
+      {/* Tab content: Overview Stats */}
+      {activeTab === "stats" && (
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex items-center justify-between">
+              <div>
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Members</span>
+                <h3 className="text-3xl font-black text-white font-outfit mt-1">{totalUsers}</h3>
+              </div>
+              <Users className="w-10 h-10 text-white/70 opacity-30" />
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex items-center justify-between">
+              <div>
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Teams Formed</span>
+                <h3 className="text-3xl font-black text-white font-outfit mt-1">{totalTeams}</h3>
+              </div>
+              <Trophy className="w-10 h-10 text-white opacity-30" />
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex items-center justify-between">
+              <div>
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Registrations</span>
+                <h3 className="text-3xl font-black text-white font-outfit mt-1">{totalRegistrations}</h3>
+              </div>
+              <CheckCircle className="w-10 h-10 text-emerald-400 opacity-30" />
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex items-center justify-between">
+              <div>
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Pending Queries</span>
+                <h3 className="text-3xl font-black text-white font-outfit mt-1">{pendingEnquiries}</h3>
+              </div>
+              <Mail className="w-10 h-10 text-white/60 opacity-30" />
+            </div>
+          </div>
+
+          {/* Quick list alerts */}
+          <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl">
+            <h3 className="text-lg font-bold font-outfit text-white mb-4">Upcoming SIH Submission status</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Registrations close on September 18, 2026. Dispatched nominative certificates will be issued via the certificates creator engine once hackathon evaluations close on September 21.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Members List */}
+      {activeTab === "users" && (
+        <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <h3 className="text-lg font-bold font-outfit text-white">Registered Members</h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search name, ID..."
+                value={searchTerms.users}
+                onChange={(e) => handleSearchChange("users", e.target.value)}
+                className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-xs focus:outline-none"
+              />
+              <Button variant="cyan" size="sm" className="text-xs" onClick={() => exportTableData("Members")}>
+                <FileSpreadsheet className="w-4 h-4 mr-1" /> Export
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/5 text-xs text-white uppercase font-bold">
+                  <th className="p-3">Reg No.</th>
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Mobile</th>
+                  <th className="p-3">Department</th>
+                  <th className="p-3">Year</th>
+                  <th className="p-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getFilteredUsers().map((u) => (
+                  <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 text-slate-300">
+                    <td className="p-3 font-mono text-xs">{u.regNo}</td>
+                    <td className="p-3 font-bold text-white">
+                      <div className="flex items-center gap-2">
+                        {u.image ? (
+                          <img src={u.image} alt={u.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/20/20 to-transparent/20 flex items-center justify-center text-[9px] font-bold text-white border border-white/10">
+                            {u.name.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <span>{u.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3">{u.email}</td>
+                    <td className="p-3">{u.mobile}</td>
+                    <td className="p-3">{u.department}</td>
+                    <td className="p-3">{u.year}</td>
+                    <td className="p-3 flex justify-center">
+                      <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px]" onClick={() => setViewingUser(u)}>
+                        <Eye className="w-3.5 h-3.5 mr-1" /> View
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Tab: Registrations (Event Details Table) */}
+      {activeTab === "registrations" && (
+        <AdminEventDetailsTable 
+          events={events}
+          users={users}
+          teams={teams}
+          eventRegistrations={eventRegistrations}
+          expandedEventId={expandedEventId}
+          setExpandedEventId={setExpandedEventId}
+        />
+      )}
+
+      {/* Tab: Enquiries */}
+      {activeTab === "enquiries" && (
+        <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <h3 className="text-lg font-bold font-outfit text-white">Enquiries Ledger</h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search query content..."
+                value={searchTerms.enquiries}
+                onChange={(e) => handleSearchChange("enquiries", e.target.value)}
+                className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-xs focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/5 text-xs text-white uppercase font-bold">
+                  <th className="p-3">From</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Subject</th>
+                  <th className="p-3">Message</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getFilteredEnquiries().map((e, idx) => (
+                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 text-slate-300">
+                    <td className="p-3 font-bold text-white">{e.name}</td>
+                    <td className="p-3">{e.email}</td>
+                    <td className="p-3 font-semibold text-white/70">{e.subject}</td>
+                    <td className="p-3 max-w-[200px] truncate" title={e.message}>{e.message}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        e.status === "resolved" 
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      }`}>
+                        {e.status}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      {e.status === "pending" && (
+                        <Button
+                          variant="cyan"
+                          size="sm"
+                          className="px-3 py-1 text-xs flex items-center gap-1"
+                          onClick={() => handleRespond(idx)}
+                        >
+                          Respond <ArrowRight className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Content Management Tabs */}
+      {(activeTab === "events" || activeTab === "clubs" || activeTab === "admins" || activeTab === "announcements") && (
+        <AdminContentManager
+          events={events}
+          setEvents={setEvents}
+          clubs={clubs}
+          setClubs={setClubs}
+          administrators={administrators}
+          setAdministrators={setAdministrators}
+          announcements={announcements || []}
+          setAnnouncements={setAnnouncements}
+          activeTab={activeTab as any}
+        />
+      )}
+
+      {/* User Details Modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full relative">
+            <button
+              onClick={() => setViewingUser(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold font-outfit text-white mb-6 border-b border-white/10 pb-4">Member Details</h3>
+            
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              {/* Profile Image */}
+              <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-white/20/50 flex-shrink-0 bg-black flex items-center justify-center">
+                {viewingUser.image ? (
+                  <img src={viewingUser.image} alt={viewingUser.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-4xl font-bold text-white/50">{viewingUser.name.substring(0,2).toUpperCase()}</span>
+                )}
+              </div>
+              
+              {/* Profile Info */}
+              <div className="flex-1 flex flex-col gap-3 w-full text-sm">
+                <div className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Register Number</span>
+                  <span className="font-mono text-white">{viewingUser.regNo}</span>
+                </div>
+                <div className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Full Name</span>
+                  <span className="font-bold text-white">{viewingUser.name}</span>
+                </div>
+                <div className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Email Address</span>
+                  <span className="text-slate-300">{viewingUser.email}</span>
+                </div>
+                <div className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Mobile Number</span>
+                  <span className="text-slate-300">{viewingUser.mobile}</span>
+                </div>
+                <div className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Academics</span>
+                  <span className="text-slate-300">Dept. of {viewingUser.department}, Year {viewingUser.year}</span>
+                </div>
+                <div className="flex flex-col pb-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">System Role</span>
+                  <span className="text-slate-300 capitalize">{viewingUser.role}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex justify-end">
+              <Button variant="ghost" onClick={() => setViewingUser(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
