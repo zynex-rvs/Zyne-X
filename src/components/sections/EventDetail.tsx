@@ -94,13 +94,13 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
         <div className="lg:col-span-2 flex flex-col gap-10">
           
           {/* Banner */}
-          <div className="event-detail-image w-full h-[320px] rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/20/20 shadow-2xl relative">
+          <div className="event-detail-image w-full h-[320px] rounded-[2rem] overflow-hidden neumorphic-raised relative">
             <img
               src={event.image || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80"}
               alt={event.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-6 left-6 bg-black/90 backdrop-blur border border-white/20/30 px-4 py-2 rounded-xl flex items-center gap-2">
+            <div className="absolute bottom-6 left-6 neumorphic-inset px-4 py-2 rounded-xl flex items-center gap-2">
               <span className="text-[10px] font-bold text-white/70 tracking-widest uppercase">{event.category}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
               <span className="text-xs font-semibold text-slate-300">{event.venue}</span>
@@ -108,7 +108,7 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
           </div>
 
           {/* Specifications */}
-          <div className="event-detail-info glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-6">
+          <div className="event-detail-info neumorphic-raised p-8 rounded-[2rem] flex flex-col gap-6">
             <div>
               <h3 className="text-xl font-bold font-outfit text-white mb-3">Overview</h3>
               <p className="text-slate-300 text-sm leading-relaxed">{event.description}</p>
@@ -152,7 +152,7 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
         <div className="flex flex-col gap-6">
           
           {/* Timeline counter block */}
-          <div className="glass-panel p-6 rounded-2xl border border-white/20/20 shadow-2xl flex flex-col gap-5 text-center relative overflow-hidden">
+          <div className="neumorphic-inset p-6 rounded-[2rem] flex flex-col gap-5 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-white/20/5 to-transparent pointer-events-none" />
             
             {status === "upcoming" ? (
@@ -181,7 +181,7 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
 
           {/* Prizes Spec block */}
           {event.prizes && event.prizes.length > 0 && (
-            <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
+            <div className="neumorphic-raised p-6 rounded-[2rem] flex flex-col gap-4">
               <h4 className="text-sm font-bold font-outfit text-white border-b border-white/5 pb-2 flex items-center gap-2">
                 <Award className="w-4 h-4 text-white" /> Event Prizes
               </h4>
@@ -197,7 +197,7 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
           )}
 
           {/* Quick Specifications block */}
-          <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
+          <div className="neumorphic-raised p-6 rounded-[2rem] flex flex-col gap-4">
             <h4 className="text-sm font-bold font-outfit text-white border-b border-white/5 pb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-white/70" /> Quick Specifications
             </h4>

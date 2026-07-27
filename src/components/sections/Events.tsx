@@ -63,7 +63,7 @@ export default function Events({ events, onRegisterClick, onViewDetailsClick }: 
               placeholder="Search event name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-white/30 transition-all duration-300 backdrop-blur-md"
+              className="w-full pl-10 pr-4 py-2.5 neumorphic-inset rounded-xl text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all duration-300"
             />
           </div>
         </div>

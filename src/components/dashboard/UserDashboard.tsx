@@ -166,7 +166,7 @@ export default function UserDashboard({
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Profile image column */}
-              <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col items-center gap-4 text-center">
+              <div className="neumorphic-raised p-6 rounded-[2rem] flex flex-col items-center gap-4 text-center">
                 <div className="relative group cursor-pointer w-36 h-36 rounded-full overflow-hidden border-2 border-white/20 shadow-lg">
                   {currentUser.image ? (
                     <img
@@ -206,7 +206,7 @@ export default function UserDashboard({
               </div>
 
               {/* Profile Details column */}
-              <div className="md:col-span-2 glass-panel p-6 md:p-8 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-6">
+              <div className="md:col-span-2 neumorphic-raised p-6 md:p-8 rounded-[2rem] flex flex-col gap-6">
                 <h3 className="text-lg font-bold font-outfit text-white border-b border-white/5 pb-2">
                   Account Particulars
                 </h3>
@@ -234,7 +234,7 @@ export default function UserDashboard({
 
           {/* Tab: My Event Registry */}
           {activeTab === "events" && (
-            <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-6">
+            <div className="neumorphic-raised p-6 md:p-8 rounded-[2rem] flex flex-col gap-6">
               <h3 className="text-lg font-bold font-outfit text-white border-b border-white/5 pb-2">
                 Registered Tech Competitions
               </h3>
@@ -248,7 +248,7 @@ export default function UserDashboard({
                   {registeredList.map(({ event, isTeam, team }) => (
                     <div
                       key={event.id}
-                      className="p-5 rounded-xl border border-white/5 bg-black/50 flex flex-col gap-4"
+                      className="p-5 rounded-[1.5rem] neumorphic-inset flex flex-col gap-4"
                     >
                       <div className="flex justify-between items-start flex-wrap gap-4">
                         <div className="flex flex-col gap-1">
@@ -269,7 +269,7 @@ export default function UserDashboard({
 
                       {/* Display team subdetails */}
                       {isTeam && team && (
-                        <div className="p-4 rounded-lg bg-white/5 backdrop-blur-md/60 border border-white/5 flex flex-col gap-4 mt-2">
+                        <div className="p-5 rounded-2xl neumorphic-raised flex flex-col gap-4 mt-2">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                             <div>
                               <span className="text-slate-500 font-semibold uppercase tracking-wider">Team Name:</span>
@@ -346,7 +346,7 @@ export default function UserDashboard({
                                     type="text"
                                     placeholder="Enter Reg No..."
                                     id={`invite-input-${team.teamCode}`}
-                                    className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-xs text-slate-100 focus:outline-none focus:border-white/30 font-mono"
+                                    className="flex-1 px-3 py-2 neumorphic-inset rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                                   />
                                   <Button
                                     variant="cyan"
@@ -379,7 +379,7 @@ export default function UserDashboard({
                                   placeholder="e.g. PS-123"
                                   defaultValue={team.problemStatement}
                                   id={`ps-input-${team.teamCode}`}
-                                  className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-xs text-slate-100 focus:outline-none focus:border-white/30"
+                                  className="flex-1 px-3 py-2 neumorphic-inset rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                                 />
                                 <Button
                                   variant="cyan"

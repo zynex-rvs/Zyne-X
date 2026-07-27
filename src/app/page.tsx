@@ -281,25 +281,24 @@ export default function Home() {
   };
 
   const handleAdminLogin = async (id: string, pass: string) => {
-    if (id === "admin" && pass === "admin123") {
-      const adminUser: User = {
-        id: "admin-uuid-placeholder",
-        regNo: "admin",
-        name: "ADMINISTRATOR",
-        email: "admin@zynex.club",
-        mobile: "0000000000",
-        department: "AI & ML",
-        year: "STAFF",
-        role: "admin",
-      };
+    // Check users table for a matching record with role 'admin'
+    const { data: adminUser, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("regNo", id) // Usually an admin ID or username in the regNo field
+      .eq("password", pass)
+      .eq("role", "admin")
+      .single();
+
+    if (adminUser) {
       setCurrentUser(adminUser);
       localStorage.setItem("zynex_current_user", JSON.stringify(adminUser));
       setActiveModal(null);
       setViewMode("admin-dashboard");
       setSelectedEvent(null);
-      addToast("Administrator access granted.", "success");
+      addToast(`Administrator access granted. Welcome ${adminUser.name}.`, "success");
     } else {
-      addToast("Invalid administrator credentials.", "error");
+      addToast("Invalid administrator credentials or unauthorized role.", "error");
     }
   };
 

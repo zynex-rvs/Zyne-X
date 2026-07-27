@@ -208,7 +208,7 @@ export default function Navbar({
           )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-slate-300 hover:text-white focus:outline-none"
+            className="p-2 -mr-2 text-slate-300 hover:text-white focus:outline-none"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

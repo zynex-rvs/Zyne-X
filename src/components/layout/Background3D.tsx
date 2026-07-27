@@ -91,7 +91,7 @@ function ParticleNetwork() {
 
 export default function Background3D() {
   return (
-    <div className="fixed inset-0 w-screen h-screen z-[-1] pointer-events-none" style={{ backgroundColor: '#1a1a1a' }}>
+    <div className="fixed inset-0 w-full h-screen z-[-1] pointer-events-none" style={{ backgroundColor: '#1a1a1a' }}>
       <Canvas camera={{ position: [0, 0, 12], fov: 60 }} dpr={[1, 2]}>
         {/* Fog to fade out particles in the distance */}
         <fog attach="fog" args={['#1a1a1a', 15, 40]} />

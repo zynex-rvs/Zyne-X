@@ -21,78 +21,65 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
     .toUpperCase();
 
   return (
-    <div className="w-[280px] h-[320px] relative group cursor-pointer hover:-translate-y-2 transition-transform duration-500">
-      <div className="relative w-full h-full flex flex-col rounded-xl overflow-hidden z-10 transition-all duration-500 neumorphic-raised neumorphic-hover-raised">
-      {/* Image Area filling the top section */}
-      <div className="flex-1 relative w-full overflow-hidden">
+    <div className="w-[280px] neumorphic-raised rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4">
+      {/* Image Area */}
+      <div className="w-full h-[200px] relative rounded-[1.5rem] overflow-hidden neumorphic-inset">
         {imageErrors[admin.name] || !admin.image ? (
-          <div className="w-full h-full flex items-center justify-center bg-white/5 text-5xl font-heading font-bold text-white/20">
+          <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a] text-5xl font-heading font-bold text-white/20">
             {initials}
           </div>
         ) : (
           <img
             src={admin.image}
             alt={admin.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 hover:opacity-100"
             onError={() => handleImageError(admin.name)}
           />
         )}
         
-        {/* Gradient overlay to ensure text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 z-0 pointer-events-none" />
-
         {/* Cyber accents (top left/right) */}
-        <div className="absolute top-4 left-4 text-[8px] font-mono text-cyan-500/80 tracking-widest uppercase z-10">
+        <div className="absolute top-3 left-3 text-[8px] font-mono text-cyan-500/80 tracking-widest uppercase z-10 bg-black/40 px-2 py-0.5 rounded backdrop-blur-md border border-white/5">
           ID://{admin.role.substring(0, 4)}
         </div>
-        <div className="absolute top-4 right-4 flex gap-1 z-10">
+        <div className="absolute top-3 right-3 flex gap-1 z-10">
           <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/80 animate-pulse" />
           <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/40" />
         </div>
-
-        {/* Content Area overlaying the bottom of the image */}
-        <div className="absolute bottom-0 left-0 w-full p-5 flex flex-col items-start justify-end z-10">
-          <div className="px-3 py-1 mb-2 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[9px] font-bold uppercase tracking-widest text-cyan-100 shadow-[0_0_10px_rgba(6,182,212,0.2)] backdrop-blur-md">
-            {admin.role}
-          </div>
-          <h3 className="text-xl font-heading font-bold text-white tracking-wide drop-shadow-lg">
-            {admin.name}
-          </h3>
-          <p className="text-white/70 text-[10px] font-mono tracking-widest mt-1 drop-shadow-md">
-            CLASS OF {admin.year}
-          </p>
+      </div>
+      
+      {/* Content Area */}
+      <div className="flex flex-col items-center text-center">
+        <div className="px-3 py-1 mb-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[9px] font-bold uppercase tracking-widest text-cyan-400">
+          {admin.role}
         </div>
+        <h3 className="text-lg font-heading font-bold text-white tracking-wide">
+          {admin.name}
+        </h3>
+        <p className="text-slate-400 text-[10px] font-mono tracking-widest mt-1">
+          CLASS OF {admin.year}
+        </p>
       </div>
       
       {/* Footer / Social Links */}
-      <div className="flex items-center justify-between p-4 bg-black/80 border-t border-white/10 relative z-10 w-full backdrop-blur-xl">
-        <div className="flex items-end gap-[2px]">
-          {/* Simulated barcode */}
-          {[12, 18, 14, 20, 10, 16, 14, 22].map((height, i) => (
-            <div key={i} className="w-1 bg-white/20 group-hover:bg-cyan-500/40 transition-colors" style={{ height: `${height}px` }} />
-          ))}
-        </div>
-        <div className="flex gap-4 text-white/50 items-center bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
-          <a 
-            href={admin.linkedin || "#"} 
-            target={admin.linkedin ? "_blank" : "_self"}
-            rel={admin.linkedin ? "noopener noreferrer" : ""}
-            className={`hover:text-cyan-300 transition-colors duration-300 ${!admin.linkedin && "opacity-50 cursor-not-allowed"}`} 
-            title="LinkedIn"
-            onClick={(e) => !admin.linkedin && e.preventDefault()}
-          >
-            <i className="fab fa-linkedin text-sm drop-shadow-md"></i>
-          </a>
-          <a 
-            href={admin.phone ? `tel:${admin.phone}` : "#"} 
-            className={`hover:text-cyan-300 transition-colors duration-300 ${!admin.phone && "opacity-50 cursor-not-allowed"}`} 
-            title="Phone"
-            onClick={(e) => !admin.phone && e.preventDefault()}
-          >
-            <Phone className="w-4 h-4 drop-shadow-md" />
-          </a>
-        </div>
-      </div>
+      <div className="flex items-center justify-center gap-4 mt-1 pt-4 border-t border-white/5">
+        <a 
+          href={admin.linkedin || "#"} 
+          target={admin.linkedin ? "_blank" : "_self"}
+          rel={admin.linkedin ? "noopener noreferrer" : ""}
+          className={`w-10 h-10 rounded-full neumorphic-inset flex items-center justify-center text-white/50 hover:text-cyan-400 transition-colors ${!admin.linkedin && "opacity-50 cursor-not-allowed"}`} 
+          title="LinkedIn"
+          onClick={(e) => !admin.linkedin && e.preventDefault()}
+        >
+          <i className="fab fa-linkedin text-sm"></i>
+        </a>
+        <a 
+          href={admin.phone ? `tel:${admin.phone}` : "#"} 
+          className={`w-10 h-10 rounded-full neumorphic-inset flex items-center justify-center text-white/50 hover:text-cyan-400 transition-colors ${!admin.phone && "opacity-50 cursor-not-allowed"}`} 
+          title="Phone"
+          onClick={(e) => !admin.phone && e.preventDefault()}
+        >
+          <Phone className="w-4 h-4" />
+        </a>
       </div>
     </div>
   );

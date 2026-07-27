@@ -49,7 +49,7 @@ export default function EventsGallery({
           placeholder="Search all hackathons, paper presentations..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-white/30 transition-all duration-300"
+          className="w-full pl-10 pr-4 py-3 neumorphic-inset rounded-xl text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all duration-300"
         />
       </div>
 
@@ -152,9 +152,9 @@ function GalleryEventCard({
   }, [event.date, event.time, event.registrationEndDate]);
 
   return (
-    <Card glowColor={status === "upcoming" ? "purple" : "none"} className="flex flex-col h-full border border-white/5">
+    <Card glowColor={status === "upcoming" ? "purple" : "none"} className="flex flex-col h-full neumorphic-raised neumorphic-hover-raised rounded-[2rem] p-4">
       {/* Photo */}
-      <div className="w-full h-44 rounded-lg overflow-hidden bg-white/5 backdrop-blur-md relative border border-white/5">
+      <div className="w-full h-44 rounded-xl overflow-hidden neumorphic-inset relative">
         {imageError || !event.image ? (
           <img
             src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"

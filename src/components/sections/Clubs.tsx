@@ -29,47 +29,48 @@ export default function Clubs({ clubs = [] }: ClubsProps) {
         const IconComponent = IconMap[club.icon] || Zap;
 
         return (
-          <div key={club.id} className="group relative flex flex-col justify-end min-h-[320px] cursor-pointer rounded-xl transition-all duration-500 overflow-hidden neumorphic-raised neumorphic-hover-raised">
-
-            {/* Image Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden rounded-xl">
+          <div key={club.id} className="neumorphic-raised rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4">
+            
+            {/* Image Area */}
+            <div className="w-full h-[180px] relative rounded-[1.5rem] overflow-hidden neumorphic-inset flex items-center justify-center">
               {club.image ? (
                 <img 
                   src={club.image} 
                   alt={club.name} 
-                  className="w-full h-full object-cover opacity-40 group-hover:opacity-70 group-hover:scale-110 transition-all duration-1000 ease-out" 
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" 
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                  <IconComponent className="w-48 h-48 drop-shadow-[0_0_25px_rgba(255,255,255,0.5)]" />
+                <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a]">
+                  <IconComponent className="w-20 h-20 text-white/10 group-hover:text-cyan-500/20 transition-colors duration-500" />
                 </div>
               )}
-              {/* Glass Gradient Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
             
-            {/* Content Pushed to Bottom */}
-            <div className="p-8 relative z-10 flex flex-col transform translate-y-4 group-hover:translate-y-0 transition-transform duration-700 ease-out">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 flex items-center justify-center mb-6 backdrop-blur-md shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all duration-700 group-hover:-translate-y-2">
-                 <IconComponent className="w-5 h-5 text-white group-hover:text-cyan-300 transition-colors duration-500 drop-shadow-md" />
+            {/* Content Area */}
+            <div className="flex flex-col items-center text-center px-2 flex-1">
+              <div className="w-12 h-12 rounded-full neumorphic-inset flex items-center justify-center mb-4 border border-white/5 group-hover:border-cyan-500/30 transition-colors -mt-10 relative z-10 bg-[#1a1a1a]">
+                <IconComponent className="w-5 h-5 text-white/70 group-hover:text-cyan-400 transition-colors" />
               </div>
 
-              <h3 className="text-2xl font-heading font-bold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-cyan-200 transition-all duration-500 drop-shadow-md">
+              <h3 className="text-xl font-heading font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors drop-shadow-md">
                 {club.name}
               </h3>
               
               {club.subtitle && (
-                <h4 className="text-xs font-semibold tracking-widest uppercase mb-4 text-blue-400/80">
+                <h4 className="text-[10px] font-mono tracking-widest uppercase mb-3 text-cyan-500/70">
                   {club.subtitle}
                 </h4>
               )}
               
-              <p className="text-white/60 text-sm leading-relaxed mb-6 font-sans line-clamp-2 group-hover:line-clamp-none transition-all duration-700">
+              <p className="text-slate-400 text-xs leading-relaxed mb-4 line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
                 {club.description}
               </p>
-              
-              <div className="mt-auto flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/30 group-hover:text-blue-400 transition-colors duration-500">
-                Explore <ArrowRight className="w-4 h-4 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" />
+            </div>
+
+            {/* Footer */}
+            <div className="mt-auto pt-4 border-t border-white/5 flex justify-center">
+              <div className="px-6 py-2 rounded-full neumorphic-inset text-[10px] font-bold uppercase tracking-widest text-white/50 group-hover:text-cyan-400 flex items-center gap-2 transition-colors">
+                Explore <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 

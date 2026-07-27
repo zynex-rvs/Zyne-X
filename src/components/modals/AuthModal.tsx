@@ -47,6 +47,8 @@ export default function AuthModal({
   const [otpCode, setOtpCode] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
   const [signupData, setSignupData] = useState<any>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   const {
     register: loginRegister,
@@ -73,21 +75,58 @@ export default function AuthModal({
     resetLogin();
   };
 
-  const onSignupSubmit = (data: any) => {
-    setSignupData(data);
-    setActiveModal("otp");
-    resetSignup();
-    alert("OTP sent! Enter 123456 to verify your registration.");
+  const onSignupSubmit = async (data: any) => {
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, name: data.name }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setSignupData(data);
+        setActiveModal("otp");
+        resetSignup();
+      } else {
+        alert(`Failed to send OTP: ${result.error}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while sending the OTP.");
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
-  const handleOtpVerify = (e: React.FormEvent) => {
+  const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpCode === "123456" && signupData) {
-      onSignup(signupData);
-      setOtpCode("");
-      setSignupData(null);
-    } else {
-      alert("Invalid verification code. Try 123456.");
+    if (!signupData) return;
+
+    setIsVerifyingOtp(true);
+    try {
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: signupData.email, otp: otpCode }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        onSignup(signupData);
+        setOtpCode("");
+        setSignupData(null);
+      } else {
+        alert(result.error || "Invalid verification code.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while verifying the OTP.");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -116,7 +155,7 @@ export default function AuthModal({
         initial={{ scale: 0.9, y: 15, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 15, opacity: 0 }}
-        className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/20/20 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden z-10"
+        className="w-full max-w-md neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-hidden z-10"
       >
         <button
           onClick={onClose}
@@ -187,7 +226,7 @@ export default function AuthModal({
               </p>
             </div>
 
-            <form onSubmit={handleSignupSubmit(onSignupSubmit)} className="flex flex-col gap-4 max-h-[420px] overflow-y-auto pr-1 no-scrollbar">
+            <form onSubmit={handleSignupSubmit(onSignupSubmit)} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-3">
               <Input
                 label="Full Name"
                 placeholder="JOHN DOE"
@@ -218,13 +257,13 @@ export default function AuthModal({
                     Department
                   </label>
                   <select
-                    className={`w-full px-4 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-white/30 focus:shadow-lg transition-all duration-300 ${signupErrors.department ? "border-red-500" : ""}`}
+                    className={`w-full px-4 py-3 neumorphic-inset rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all duration-300 ${signupErrors.department ? "border-red-500" : ""}`}
                     {...signupRegister("department")}
                     defaultValue=""
                   >
-                    <option value="" disabled>Select Dept</option>
+                    <option value="" disabled className="bg-black">Select Dept</option>
                     {["AI & ML", "AI & DS", "CSE", "CY", "ECE", "MECH", "CIVIL", "AGRI", "AUTO", "MECHATRONICS"].map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
+                      <option key={dept} value={dept} className="bg-black">{dept}</option>
                     ))}
                   </select>
                   {signupErrors.department && (
@@ -238,13 +277,13 @@ export default function AuthModal({
                     Year
                   </label>
                   <select
-                    className={`w-full px-4 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-white/30 focus:shadow-lg transition-all duration-300 ${signupErrors.year ? "border-red-500" : ""}`}
+                    className={`w-full px-4 py-3 neumorphic-inset rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all duration-300 ${signupErrors.year ? "border-red-500" : ""}`}
                     {...signupRegister("year")}
                     defaultValue=""
                   >
-                    <option value="" disabled>Select Year</option>
+                    <option value="" disabled className="bg-black">Select Year</option>
                     {["I", "II", "III", "IV"].map(year => (
-                      <option key={year} value={year}>{year}</option>
+                      <option key={year} value={year} className="bg-black">{year}</option>
                     ))}
                   </select>
                   {signupErrors.year && (
@@ -276,8 +315,8 @@ export default function AuthModal({
                 error={signupErrors.confirmPassword?.message as string}
                 {...signupRegister("confirmPassword")}
               />
-              <Button type="submit" variant="primary" fullWidth className="mt-4">
-                Send OTP
+              <Button type="submit" variant="primary" fullWidth className="mt-4" disabled={isSendingOtp}>
+                {isSendingOtp ? "Sending OTP..." : "Send OTP"}
               </Button>
             </form>
 
@@ -345,8 +384,8 @@ export default function AuthModal({
                 maxLength={6}
                 required
               />
-              <Button type="submit" variant="primary" fullWidth className="mt-2">
-                Verify & Register
+              <Button type="submit" variant="primary" fullWidth className="mt-2" disabled={isVerifyingOtp}>
+                {isVerifyingOtp ? "Verifying..." : "Verify & Register"}
               </Button>
             </form>
             <p className="text-center text-xs">

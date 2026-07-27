@@ -45,6 +45,9 @@ export default function AdminDashboard({
     enquiries: "",
   });
 
+  const [userRoleFilter, setUserRoleFilter] = useState("All");
+  const [userYearFilter, setUserYearFilter] = useState("All");
+
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -61,11 +64,15 @@ export default function AdminDashboard({
 
   // Filters mapping
   const getFilteredUsers = () => {
-    return users.filter((u) => 
-      u.name.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
-      u.id.toLowerCase().includes(searchTerms.users.toLowerCase())
-    );
+    return users.filter((u) => {
+      const matchesSearch = u.name.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
+                            u.email.toLowerCase().includes(searchTerms.users.toLowerCase()) ||
+                            u.regNo.toLowerCase().includes(searchTerms.users.toLowerCase());
+      const matchesRole = userRoleFilter === "All" || u.role === userRoleFilter.toLowerCase();
+      const matchesYear = userYearFilter === "All" || u.year === userYearFilter;
+      
+      return matchesSearch && matchesRole && matchesYear;
+    });
   };
 
   const getFilteredTeams = () => {
@@ -241,10 +248,32 @@ export default function AdminDashboard({
         <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <h3 className="text-lg font-bold font-outfit text-white">Registered Members</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={userRoleFilter}
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+                className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+              >
+                <option value="All" className="bg-[#1a1a1a]">All Roles</option>
+                <option value="member" className="bg-[#1a1a1a]">Members</option>
+                <option value="admin" className="bg-[#1a1a1a]">Admins</option>
+              </select>
+
+              <select
+                value={userYearFilter}
+                onChange={(e) => setUserYearFilter(e.target.value)}
+                className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+              >
+                <option value="All" className="bg-[#1a1a1a]">All Years</option>
+                <option value="1" className="bg-[#1a1a1a]">1st Year</option>
+                <option value="2" className="bg-[#1a1a1a]">2nd Year</option>
+                <option value="3" className="bg-[#1a1a1a]">3rd Year</option>
+                <option value="4" className="bg-[#1a1a1a]">4th Year</option>
+              </select>
+
               <input
                 type="text"
-                placeholder="Search name, ID..."
+                placeholder="Search name, Reg No..."
                 value={searchTerms.users}
                 onChange={(e) => handleSearchChange("users", e.target.value)}
                 className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-xs focus:outline-none"

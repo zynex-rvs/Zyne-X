@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           ref={ref}
-          className={`w-full px-4 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-cyan-400/5 focus:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-300 ${className}`}
+          className={`w-full px-4 py-3 neumorphic-inset rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all duration-300 ${className}`}
           {...props}
         />
         {error && (

@@ -100,8 +100,8 @@ export default function Enquiry({ onSubmitEnquiry }: EnquiryProps) {
             </div>
           </div>
 
-          {/* Right Column: Form inside Glass Card */}
-          <div className="glass-card p-8 md:p-10 rounded-3xl relative overflow-hidden group">
+          {/* Right Column: Form inside Neumorphic Card */}
+          <div className="neumorphic-raised p-8 md:p-10 rounded-[2rem] relative overflow-hidden group">
             {/* Soft inner glow that follows hover state subtly */}
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
@@ -147,7 +147,7 @@ export default function Enquiry({ onSubmitEnquiry }: EnquiryProps) {
                   <textarea
                     rows={5}
                     placeholder="Draft your query here..."
-                    className={`w-full px-4 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-cyan-400/5 focus:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-300 resize-none ${
+                    className={`w-full px-4 py-3 neumorphic-inset rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all duration-300 resize-none ${
                       errors.message ? "border-red-500" : ""
                     }`}
                     {...register("message")}

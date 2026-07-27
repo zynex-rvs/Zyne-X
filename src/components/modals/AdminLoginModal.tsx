@@ -84,10 +84,6 @@ export default function AdminLoginModal({
               required
             />
             
-            <div className="p-3 rounded-lg bg-white/10 border border-white/20/20 flex gap-2.5 items-start text-[11px] text-slate-400 mt-1">
-              <ShieldAlert className="w-4 h-4 text-white/70 shrink-0 mt-0.5" />
-              <span>Default trial credentials are configured in ledger as: <strong>admin / admin123</strong>.</span>
-            </div>
 
             <Button type="submit" variant="primary" fullWidth className="mt-2">
               Verify Credentials
