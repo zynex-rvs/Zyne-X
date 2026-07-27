@@ -2,19 +2,23 @@
 
 import React, { useState } from "react";
 import { User, Event, Team, Registration, Enquiry, Club, Administrator } from "@/types";
-import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X } from "lucide-react";
+import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AdminDashboardProps {
   events: Event[];
   setEvents: (val: Event[]) => void;
   administrators: Administrator[];
   setAdministrators: (val: Administrator[]) => void;
+  nexauraAdministrators: Administrator[];
+  setNexauraAdministrators: (val: Administrator[]) => void;
   clubs: Club[];
   setClubs: (val: Club[]) => void;
   users: User[];
+  setUsers: (val: User[]) => void;
   teams: Record<string, Team>;
   eventRegistrations: Record<string, Registration[]>;
   enquiries: Enquiry[];
@@ -26,8 +30,9 @@ interface AdminDashboardProps {
 export default function AdminDashboard({
   events, setEvents,
   administrators, setAdministrators,
+  nexauraAdministrators, setNexauraAdministrators,
   clubs, setClubs,
-  users,
+  users, setUsers,
   teams,
   eventRegistrations,
   enquiries,
@@ -35,7 +40,7 @@ export default function AdminDashboard({
   announcements,
   setAnnouncements,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "announcements">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements">("stats");
   
   // Search parameters
   const [searchTerms, setSearchTerms] = useState({
@@ -117,6 +122,16 @@ export default function AdminDashboard({
     alert(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`);
   };
 
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this member?")) return;
+    const { error } = await supabase.from("users").delete().eq("id", id);
+    if (error) {
+      alert("Failed to delete user: " + error.message);
+      return;
+    }
+    setUsers(users.filter(u => u.id !== id));
+  };
+
   return (
     <div id="admin-dashboard" className="dashboard block">
       <div className="dashboard-header flex justify-between items-center mb-8 pb-4 border-b border-white/5">
@@ -185,6 +200,14 @@ export default function AdminDashboard({
           }`}
         >
           Manage Admins
+        </button>
+        <button
+          onClick={() => setActiveTab("nexaura-admins")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "nexaura-admins" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          NEXAURA Admins
         </button>
         <button
           onClick={() => setActiveTab("announcements")}
@@ -317,9 +340,12 @@ export default function AdminDashboard({
                     <td className="p-3">{u.mobile}</td>
                     <td className="p-3">{u.department}</td>
                     <td className="p-3">{u.year}</td>
-                    <td className="p-3 flex justify-center">
+                    <td className="p-3 flex justify-center gap-2">
                       <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px]" onClick={() => setViewingUser(u)}>
                         <Eye className="w-3.5 h-3.5 mr-1" /> View
+                      </Button>
+                      <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => handleDeleteUser(u.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </td>
                   </tr>
@@ -409,7 +435,7 @@ export default function AdminDashboard({
       )}
 
       {/* Content Management Tabs */}
-      {(activeTab === "events" || activeTab === "clubs" || activeTab === "admins" || activeTab === "announcements") && (
+      {(activeTab === "events" || activeTab === "clubs" || activeTab === "admins" || activeTab === "nexaura-admins" || activeTab === "announcements") && (
         <AdminContentManager
           events={events}
           setEvents={setEvents}
@@ -417,6 +443,8 @@ export default function AdminDashboard({
           setClubs={setClubs}
           administrators={administrators}
           setAdministrators={setAdministrators}
+          nexauraAdministrators={nexauraAdministrators}
+          setNexauraAdministrators={setNexauraAdministrators}
           announcements={announcements || []}
           setAnnouncements={setAnnouncements}
           activeTab={activeTab as any}

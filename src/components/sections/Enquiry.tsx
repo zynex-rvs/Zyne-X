@@ -84,7 +84,7 @@ export default function Enquiry({ onSubmitEnquiry }: EnquiryProps) {
                 </div>
                 <div>
                   <h4 className="text-white font-bold text-sm tracking-wide uppercase">Email Us</h4>
-                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">contact@zynex.edu</p>
+                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">zynex.rvs@gmail.com</p>
                 </div>
               </div>
               
@@ -94,7 +94,7 @@ export default function Enquiry({ onSubmitEnquiry }: EnquiryProps) {
                 </div>
                 <div>
                   <h4 className="text-white font-bold text-sm tracking-wide uppercase">Visit Us</h4>
-                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">3rd Floor, AI & ML Department</p>
+                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">3rd Floor, AI & ML Dept, RVS iTech, Coimbatore</p>
                 </div>
               </div>
             </div>

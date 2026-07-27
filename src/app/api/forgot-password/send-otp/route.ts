@@ -3,28 +3,39 @@ import { supabase } from '@/lib/supabaseClient';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 
-const sendOtpSchema = z.object({
+const sendForgotOtpSchema = z.object({
   email: z.string().email('Invalid email format'),
-  name: z.string().optional(),
 });
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const result = sendOtpSchema.safeParse(body);
+    const result = sendForgotOtpSchema.safeParse(body);
 
     if (!result.success) {
       const errorMessage = result.error.issues?.[0]?.message || 'Invalid input';
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    const { email, name } = result.data;
+    const { email } = result.data;
 
-    // 1. Generate a 6-digit OTP
+    // 1. Check if user exists in the database
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('email, name')
+      .eq('email', email)
+      .single();
+
+    if (checkError || !existingUser) {
+      // Even if user doesn't exist, we can return an error here to inform them.
+      // (For strict security against enumeration, we might pretend it succeeded, but for a club app, error is fine)
+      return NextResponse.json({ error: 'No account found with this email' }, { status: 404 });
+    }
+
+    // 2. Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 2. Save OTP to Supabase
-    // Note: We assume the 'otps' table has been created using the provided SQL script
+    // 3. Save OTP to Supabase
     const { error: dbError } = await supabase
       .from('otps')
       .insert([{ email, otp }]);
@@ -34,26 +45,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to generate OTP' }, { status: 500 });
     }
 
-    // 3. Configure Nodemailer (using Gmail as an example)
-    // Make sure SMTP_USER and SMTP_PASS are set in .env.local
+    // 4. Send the Email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // This must be an App Password, not the regular account password
+        pass: process.env.SMTP_PASS,
       },
     });
 
-    // 4. Send the Email
     const mailOptions = {
       from: `"ZYNE-X Admin" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: 'ZYNE-X - Your Registration Verification Code',
+      subject: 'ZYNE-X - Password Reset Code',
       html: `
         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; background-color: #f8fafc;">
-          <h2 style="color: #0ea5e9; text-align: center;">ZYNE-X Verification</h2>
-          <p style="color: #334155; font-size: 16px;">Hello ${name || 'Candidate'},</p>
-          <p style="color: #334155; font-size: 16px;">Please use the following 6-digit code to verify your email address and complete your registration.</p>
+          <h2 style="color: #0ea5e9; text-align: center;">Password Reset Request</h2>
+          <p style="color: #334155; font-size: 16px;">Hello ${existingUser.name || 'Member'},</p>
+          <p style="color: #334155; font-size: 16px;">We received a request to reset your password. Use the code below to proceed.</p>
           <div style="text-align: center; margin: 30px 0;">
             <span style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #0f172a; background-color: #e0f2fe; padding: 15px 25px; border-radius: 8px;">
               ${otp}
@@ -68,9 +77,9 @@ export async function POST(req: Request) {
 
     await transporter.sendMail(mailOptions);
 
-    return NextResponse.json({ success: true, message: 'OTP sent successfully' });
+    return NextResponse.json({ success: true, message: 'Password reset OTP sent successfully' });
   } catch (error: any) {
-    console.error('Send OTP Error:', error);
+    console.error('Forgot Password Send OTP Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

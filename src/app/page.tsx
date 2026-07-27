@@ -56,6 +56,7 @@ export default function Home() {
   // Global States (Supabase synchronized)
   const [events, setEvents] = useState<Event[]>([]);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
+  const [nexauraAdministrators, setNexauraAdministrators] = useState<Administrator[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   
   const [users, setUsers] = useState<User[]>([]);
@@ -75,25 +76,18 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1. Fetch lightweight public data required for the landing page
         const [
           { data: eventsData },
           { data: adminsData },
+          { data: nexauraAdminsData },
           { data: clubsData },
-          { data: usersData },
-          { data: teamsData },
-          { data: regsData },
-          { data: enqData },
-          { data: notifsData },
           { data: announcementsData, error: annError }
         ] = await Promise.all([
           supabase.from("events").select("*"),
           supabase.from("administrators").select("*"),
+          supabase.from("nexaura_administrators").select("*"),
           supabase.from("clubs").select("*"),
-          supabase.from("users").select("*"),
-          supabase.from("teams").select("*"),
-          supabase.from("registrations").select("*"),
-          supabase.from("enquiries").select("*"),
-          supabase.from("notifications").select("*"),
           supabase.from("announcements").select("*")
         ]);
 
@@ -107,13 +101,47 @@ export default function Home() {
           setEvents(sorted);
         }
         if (adminsData) setAdministrators(adminsData);
+        if (nexauraAdminsData) setNexauraAdministrators(nexauraAdminsData);
         if (clubsData) setClubs(clubsData);
-        if (usersData) setUsers(usersData);
-        if (enqData) setEnquiries(enqData);
-        if (notifsData) setNotifications(notifsData);
         if (announcementsData && !annError && announcementsData.length > 0) {
           setAnnouncements(announcementsData);
         }
+
+        // Restore user session immediately using localStorage data
+        const storedUser = localStorage.getItem("zynex_current_user");
+        let parsedUser = null;
+        if (storedUser) {
+          parsedUser = JSON.parse(storedUser);
+          setCurrentUser(parsedUser);
+        }
+
+        // Unblock the UI rendering immediately after core data is loaded!
+        setIsLoaded(true);
+
+        // 2. Fetch heavier admin and dashboard data in the background
+        const [
+          { data: usersData },
+          { data: teamsData },
+          { data: regsData },
+          { data: enqData },
+          { data: notifsData }
+        ] = await Promise.all([
+          supabase.from("users").select("*"),
+          supabase.from("teams").select("*"),
+          supabase.from("registrations").select("*"),
+          supabase.from("enquiries").select("*"),
+          supabase.from("notifications").select("*")
+        ]);
+
+        if (usersData) {
+          setUsers(usersData);
+          if (parsedUser) {
+            const freshUser = usersData.find(u => u.id === parsedUser.id);
+            if (freshUser) setCurrentUser(freshUser);
+          }
+        }
+        if (enqData) setEnquiries(enqData);
+        if (notifsData) setNotifications(notifsData);
 
         if (teamsData) {
           const teamsMap: Record<string, TeamType> = {};
@@ -132,17 +160,8 @@ export default function Home() {
           setEventRegistrations(regsMap);
         }
 
-        // Restore user session if exists
-        const storedUser = localStorage.getItem("zynex_current_user");
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          // refresh user data from DB
-          const freshUser = usersData?.find(u => u.id === parsed.id);
-          setCurrentUser(freshUser || parsed);
-        }
       } catch (err) {
         console.error("Error fetching data from Supabase:", err);
-      } finally {
         setIsLoaded(true);
       }
     };
@@ -702,7 +721,10 @@ export default function Home() {
             <Clubs clubs={clubs} />
             
             <div className="animated-divider max-w-6xl" />
-            <Team admins={administrators} />
+            <div className="animated-divider max-w-6xl" />
+            <Team admins={administrators} subtitle="ZYNE-X" />
+            <div className="animated-divider max-w-6xl" />
+            <Team admins={nexauraAdministrators} subtitle="NEXAURA" />
             <div className="animated-divider max-w-6xl" />
             
             <Events
@@ -799,9 +821,12 @@ export default function Home() {
             setEvents={setEvents}
             administrators={administrators}
             setAdministrators={setAdministrators}
+            nexauraAdministrators={nexauraAdministrators}
+            setNexauraAdministrators={setNexauraAdministrators}
             clubs={clubs}
             setClubs={setClubs}
             users={users}
+            setUsers={setUsers}
             teams={teams}
             eventRegistrations={eventRegistrations}
             enquiries={enquiries}

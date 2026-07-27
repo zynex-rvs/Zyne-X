@@ -49,6 +49,11 @@ export default function AuthModal({
   const [signupData, setSignupData] = useState<any>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isSendingForgotOtp, setIsSendingForgotOtp] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const {
     register: loginRegister,
@@ -138,12 +143,65 @@ export default function AuthModal({
     }
   };
 
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (forgotEmail) {
-      alert(`Instruction email dispatched to ${forgotEmail}.`);
-      setForgotEmail("");
-      setActiveModal("login");
+    if (!forgotEmail) return;
+    
+    setIsSendingForgotOtp(true);
+    try {
+      const res = await fetch('/api/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const result = await res.json();
+      
+      if (res.ok) {
+        setActiveModal("forgot-password-reset");
+      } else {
+        alert(result.error || "Failed to send reset code.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while sending the reset code.");
+    } finally {
+      setIsSendingForgotOtp(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotOtp || !newPassword || !confirmNewPassword) return;
+    
+    if (newPassword !== confirmNewPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+    
+    setIsResettingPassword(true);
+    try {
+      const res = await fetch('/api/forgot-password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail, otp: forgotOtp, newPassword }),
+      });
+      const result = await res.json();
+      
+      if (res.ok) {
+        alert("Password reset successfully! You can now sign in.");
+        setForgotEmail("");
+        setForgotOtp("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setActiveModal("login");
+      } else {
+        alert(result.error || "Failed to reset password.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while resetting the password.");
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -358,8 +416,60 @@ export default function AuthModal({
                 onChange={(e) => setForgotEmail(e.target.value)}
                 required
               />
-              <Button type="submit" variant="primary" fullWidth className="mt-2">
-                Dispatch Instructions
+              <Button type="submit" variant="primary" fullWidth className="mt-2" disabled={isSendingForgotOtp}>
+                {isSendingForgotOtp ? "Sending Code..." : "Send Reset Code"}
+              </Button>
+            </form>
+            <p className="text-center text-xs">
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setActiveModal("login"); }}
+                className="text-white hover:underline"
+              >
+                Back to Sign In
+              </a>
+            </p>
+          </div>
+        )}
+
+        {/* Modal: Forgot Password Reset */}
+        {activeModal === "forgot-password-reset" && (
+          <div className="flex flex-col gap-5">
+            <div className="text-center">
+              <h2 className="text-xl font-bold font-outfit text-white mb-1">Set New Password</h2>
+              <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold text-white/60">
+                OTP Verification
+              </p>
+            </div>
+            <form onSubmit={handleResetPasswordSubmit} className="flex flex-col gap-4">
+              <Input
+                label="Enter 6-Digit OTP"
+                placeholder="123456"
+                value={forgotOtp}
+                onChange={(e) => setForgotOtp(e.target.value)}
+                maxLength={6}
+                required
+              />
+              <Input
+                label="New Password"
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <Button type="submit" variant="primary" fullWidth className="mt-2" disabled={isResettingPassword}>
+                {isResettingPassword ? "Resetting..." : "Reset Password"}
               </Button>
             </form>
             <p className="text-center text-xs">

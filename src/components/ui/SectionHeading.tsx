@@ -4,9 +4,10 @@ import { useRef, useEffect, useState } from "react";
 
 interface SectionHeadingProps {
   title: string;
+  subtitle?: string;
 }
 
-export default function SectionHeading({ title }: SectionHeadingProps) {
+export default function SectionHeading({ title, subtitle }: SectionHeadingProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -44,13 +45,13 @@ export default function SectionHeading({ title }: SectionHeadingProps) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative flex flex-col items-center justify-center mb-16 w-full overflow-visible">
+    <div ref={containerRef} className="relative flex flex-col items-center justify-center mb-2 w-full overflow-visible">
       
       {/* Decorative top accent — minimal single dot and line */}
       <div className={`flex items-center gap-3 mb-6 transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-white/20" />
         <span className="text-[10px] font-sans font-medium tracking-[0.4em] uppercase text-neutral-400">
-          {title}
+          {subtitle || title}
         </span>
         <div className="w-12 h-[1px] bg-gradient-to-l from-transparent to-white/20" />
       </div>

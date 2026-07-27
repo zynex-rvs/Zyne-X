@@ -101,18 +101,18 @@ export default function Hero({ onJoinClick, onExploreClick }: HeroProps) {
             <img
               className={styles.logo}
               src="/zynex-logo.png"
-              alt="ZYNE-X"
+              alt="ZYNEX - Official AI & ML Association"
               onAnimationStart={scheduleGlitches}
               onAnimationIteration={scheduleGlitches}
             />
           </div>
 
           <div className={`${styles.logoSlot} ${styles.b}`}>
-            <img className={styles.logo} src="/nexaura-logo.png" alt="NexAura" />
+            <img className={styles.logo} src="/nexaura-logo.png" alt="NEXAURA - Official AI & DS Association" />
           </div>
 
           <div className={`${styles.logoSlot} ${styles.c}`}>
-            <img className={styles.logo} src="/rivals-logo.png" alt="RIVALS — Dept. of Artificial Intelligence and Machine Learning" />
+            <img className={styles.logo} src="/rivals-logo.png" alt="RIVALS — Dept. of Artificial Intelligence and Machine Learning at RVS iTech" />
           </div>
         </div>
 
@@ -132,6 +132,7 @@ export default function Hero({ onJoinClick, onExploreClick }: HeroProps) {
 
       <div className={styles.caption}>
         <div className="flex flex-col items-center gap-1 mb-6 text-center">
+          <h1 className="sr-only">ZYNEX & NEXAURA - Official RIVALS Association for AI & ML at RVS iTech, Coimbatore</h1>
           <p className={styles.tagline}>DEPARTMENT OF</p>
           <p className={styles.tagline}>AI & DS | AI & ML</p>
         </div>

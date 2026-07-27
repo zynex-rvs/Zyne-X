@@ -10,6 +10,7 @@ import SectionCard from "../ui/SectionCard";
 
 interface TeamProps {
   admins: Administrator[];
+  subtitle?: string;
 }
 
 function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administrator; imageErrors: Record<string, boolean>; handleImageError: (name: string) => void }) {
@@ -85,7 +86,7 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
   );
 }
 
-export default function Team({ admins }: TeamProps) {
+export default function Team({ admins, subtitle }: TeamProps) {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const handleImageError = (name: string) => {
@@ -95,7 +96,7 @@ export default function Team({ admins }: TeamProps) {
   return (
     <SectionCard id="admins">
         <div className="col-span-12 flex flex-col items-center justify-center text-center mb-10">
-          <SectionHeading title="THE TEAM" />
+          <SectionHeading title="THE TEAM" subtitle={subtitle} />
         </div>
         
         <div className="admin-scroll-container overflow-x-auto pb-8 no-scrollbar -mx-4 px-4">

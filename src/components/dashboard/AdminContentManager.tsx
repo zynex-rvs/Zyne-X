@@ -13,15 +13,18 @@ interface AdminContentManagerProps {
   setAdministrators: (val: Administrator[]) => void;
   clubs: Club[];
   setClubs: (val: Club[]) => void;
+  nexauraAdministrators?: Administrator[];
+  setNexauraAdministrators?: (val: Administrator[]) => void;
   announcements?: import("@/types").Announcement[];
   setAnnouncements?: (val: import("@/types").Announcement[]) => void;
-  activeTab: "events" | "clubs" | "admins" | "announcements";
+  activeTab: "events" | "clubs" | "admins" | "nexaura-admins" | "announcements";
 }
 
 export default function AdminContentManager({
   events, setEvents,
   administrators, setAdministrators,
   clubs, setClubs,
+  nexauraAdministrators = [], setNexauraAdministrators = () => {},
   announcements = [], setAnnouncements = () => {},
   activeTab
 }: AdminContentManagerProps) {
@@ -52,7 +55,7 @@ export default function AdminContentManager({
         setFormData({ name: "", registrationOpenDate: "", registrationEndDate: "", date: "", time: "TBD", venue: "", category: "General", description: "", rules: "", teamSize: 6, timeline: "", image: "" });
       } else if (activeTab === "clubs") {
         setFormData({ name: "", subtitle: "", description: "", icon: "Zap", image: "" });
-      } else if (activeTab === "admins") {
+      } else if (activeTab === "admins" || activeTab === "nexaura-admins") {
         setFormData({ name: "", role: "", year: "", image: "", linkedin: "", phone: "" });
       } else if (activeTab === "announcements") {
         setFormData({ title: "", description: "", date: "", link: "", image: "" });
@@ -164,6 +167,24 @@ export default function AdminContentManager({
         if (error) { alert("Failed to update admin: " + error.message); return; }
         setAdministrators(administrators.map(a => a.id === editingId ? payload : a));
       }
+    } else if (activeTab === "nexaura-admins") {
+      const payload: Administrator = {
+        ...formData,
+        id: editingId || formData.name.toLowerCase().replace(/\s+/g, '-'),
+      };
+      if (!payload.linkedin) payload.linkedin = null as any;
+      if (!payload.phone) payload.phone = null as any;
+      if (!payload.image) delete payload.image;
+
+      if (modalMode === "add") {
+        const { error } = await safeUpsert("nexaura_administrators", payload);
+        if (error) { alert("Failed to add Nexaura admin: " + error.message); return; }
+        setNexauraAdministrators([...nexauraAdministrators, payload]);
+      } else {
+        const { error } = await safeUpsert("nexaura_administrators", payload, editingId);
+        if (error) { alert("Failed to update Nexaura admin: " + error.message); return; }
+        setNexauraAdministrators(nexauraAdministrators.map(a => a.id === editingId ? payload : a));
+      }
     } else if (activeTab === "announcements") {
       const payload: any = {
         ...formData,
@@ -200,6 +221,10 @@ export default function AdminContentManager({
       const { error } = await supabase.from("administrators").delete().eq("id", id);
       if (error) { alert("Failed to delete admin: " + error.message); return; }
       setAdministrators(administrators.filter(a => a.id !== id));
+    } else if (activeTab === "nexaura-admins") {
+      const { error } = await supabase.from("nexaura_administrators").delete().eq("id", id);
+      if (error) { alert("Failed to delete Nexaura admin: " + error.message); return; }
+      setNexauraAdministrators(nexauraAdministrators.filter(a => a.id !== id));
     } else if (activeTab === "announcements") {
       const { error } = await supabase.from("announcements").delete().eq("id", id);
       if (error) { alert("Failed to delete announcement: " + error.message); return; }
@@ -261,7 +286,7 @@ export default function AdminContentManager({
           </div>
         </div>
 
-        {activeTab === "admins" && (
+        {(activeTab === "admins" || activeTab === "nexaura-admins") && (
           <>
             <input required placeholder="Name" className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all" value={formData.name || ''} onChange={e => handleInputChange('name', e.target.value)} />
             <input required placeholder="Role" className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all" value={formData.role || ''} onChange={e => handleInputChange('role', e.target.value)} />
@@ -378,6 +403,7 @@ export default function AdminContentManager({
     if (activeTab === "events") return events;
     if (activeTab === "clubs") return clubs;
     if (activeTab === "announcements") return announcements;
+    if (activeTab === "nexaura-admins") return nexauraAdministrators;
     return administrators;
   };
 
@@ -402,7 +428,7 @@ export default function AdminContentManager({
                     {activeTab === "events" && `${item.date || "No Date"} | Max Team: ${item.teamSize || 6}`}
                     {activeTab === "clubs" && (item.description?.substring(0, 50) + "...")}
                     {activeTab === "announcements" && `${item.date || ""} | ${item.description?.substring(0, 40) + "..."}`}
-                    {activeTab === "admins" && item.role}
+                    {(activeTab === "admins" || activeTab === "nexaura-admins") && item.role}
                   </p>
                 </div>
               </div>
