@@ -69,8 +69,9 @@ export default function AdminLoginModal({
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
-              label="Admin Security ID"
-              placeholder="admin"
+              label="Admin Email Address"
+              type="email"
+              placeholder="admin@zynex.edu"
               value={adminId}
               onChange={(e) => setAdminId(e.target.value)}
               required

@@ -58,7 +58,7 @@ export default function SectionHeading({ title }: SectionHeadingProps) {
       {/* Main heading text with minimal 3D float + silver gradient */}
       <h2
         ref={headingRef}
-        className={`text-5xl md:text-7xl lg:text-8xl font-heading font-bold tracking-tight uppercase leading-none transition-opacity duration-1000 delay-200 text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-600 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`text-4xl sm:text-5xl md:text-7xl lg:text-8xl px-2 text-center font-heading font-bold tracking-tight uppercase leading-none transition-opacity duration-1000 delay-200 text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-600 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
       >
         {title}

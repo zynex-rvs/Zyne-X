@@ -370,8 +370,23 @@
 }
 
 @media (max-width: 620px) {
+  .stageWrap {
+    transform: translateY(-1vh);
+  }
+
   .stage {
-    width: 95vw;
+    width: 100vw;
+  }
+
+  .logoSlot.a .logo,
+  .logoSlot.b .logo {
+    max-width: 125%;
+    max-height: 125%;
+    width: 125%;
+  }
+
+  .caption {
+    bottom: 14%;
   }
 
   .reflection {

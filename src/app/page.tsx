@@ -233,7 +233,7 @@ export default function Home() {
   }, [scrollToSection]);
 
   const handleLogin = async (regNo: string, pass: string) => {
-    const { data: user, error } = await supabase.from("users").select("*").eq("regNo", regNo.toUpperCase()).eq("password", pass).single();
+    const { data: user, error } = await supabase.from("users").select("*").ilike("regNo", regNo.trim()).eq("password", pass).single();
     if (user) {
       setCurrentUser(user);
       localStorage.setItem("zynex_current_user", JSON.stringify(user));
@@ -282,25 +282,35 @@ export default function Home() {
   };
 
   const handleAdminLogin = async (id: string, pass: string) => {
-    // Check users table for a matching record with role 'admin'
-    const { data: adminUser, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("regNo", id) // Usually an admin ID or username in the regNo field
-      .eq("password", pass)
-      .eq("role", "admin")
-      .single();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: id.trim(),
+      password: pass,
+    });
 
-    if (adminUser) {
-      setCurrentUser(adminUser);
-      localStorage.setItem("zynex_current_user", JSON.stringify(adminUser));
-      setActiveModal(null);
-      setViewMode("admin-dashboard");
-      setSelectedEvent(null);
-      addToast(`Administrator access granted. Welcome ${adminUser.name}.`, "success");
-    } else {
-      addToast("Invalid administrator credentials or unauthorized role.", "error");
+    if (error || !data.user) {
+      console.error("Admin Auth login error:", error);
+      addToast("Invalid administrator credentials.", "error");
+      return;
     }
+
+    // Construct a synthetic admin session object since they don't have a record in the 'users' table
+    const adminUser = {
+      id: data.user.id,
+      email: data.user.email || id.trim(),
+      name: "Administrator",
+      role: "admin",
+      regNo: "ADMIN",
+      mobile: "",
+      department: "System",
+      year: "N/A"
+    };
+
+    setCurrentUser(adminUser as User);
+    localStorage.setItem("zynex_current_user", JSON.stringify(adminUser));
+    setActiveModal(null);
+    setViewMode("admin-dashboard");
+    setSelectedEvent(null);
+    addToast(`Administrator access granted. Welcome ${adminUser.name}.`, "success");
   };
 
   const handleLogout = () => {
