@@ -34,6 +34,7 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
             src={admin.image}
             alt={admin.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 hover:opacity-100"
+            style={{ objectPosition: admin.imagePosition || "center" }}
             onError={() => handleImageError(admin.name)}
           />
         )}

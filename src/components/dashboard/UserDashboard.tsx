@@ -194,6 +194,7 @@ export default function UserDashboard({
                       src={currentUser.image}
                       alt={currentUser.name}
                       className="w-full h-full object-cover"
+                      style={{ objectPosition: currentUser.imagePosition || "center" }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-white/20/20 to-transparent/20 flex items-center justify-center text-4xl font-bold tracking-wider text-white">

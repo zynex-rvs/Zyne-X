@@ -305,6 +305,20 @@ export default function AdminContentManager({
             </Button>
             <span className="text-xs text-slate-500 hidden md:inline-block">or drag and drop here</span>
           </div>
+          {formData.image && (
+            <div className="flex items-center gap-2 mt-2">
+              <label className="text-xs text-slate-400 font-semibold uppercase">Image Alignment:</label>
+              <select
+                value={formData.imagePosition || "center"}
+                onChange={(e) => handleInputChange("imagePosition", e.target.value)}
+                className="bg-black border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-cyan-500/50"
+              >
+                <option value="top">Top</option>
+                <option value="center">Center</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {(activeTab === "admins" || activeTab === "nexaura-admins") && (
