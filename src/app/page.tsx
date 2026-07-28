@@ -738,6 +738,13 @@ export default function Home() {
                   addToast("Administrators cannot register for events. Please use a student account.", "warning");
                   return;
                 }
+                const alreadyReg = event.isTeamEvent
+                  ? Object.values(teams).some((t) => t.eventId === event.id && t.members.includes(currentUser.id))
+                  : (eventRegistrations[event.id] || []).some((r) => r.userId === currentUser.id);
+                if (alreadyReg) {
+                  addToast("You are already registered for this event.", "warning");
+                  return;
+                }
                 setCurrentEvent(event);
                 setActiveModal("event-registration");
               }}
@@ -770,6 +777,13 @@ export default function Home() {
                 addToast("Administrators cannot register for events. Please use a student account.", "warning");
                 return;
               }
+              const alreadyReg = event.isTeamEvent
+                ? Object.values(teams).some((t) => t.eventId === event.id && t.members.includes(currentUser.id))
+                : (eventRegistrations[event.id] || []).some((r) => r.userId === currentUser.id);
+              if (alreadyReg) {
+                addToast("You are already registered for this event.", "warning");
+                return;
+              }
               setCurrentEvent(event);
               setActiveModal("event-registration");
             }}
@@ -788,6 +802,13 @@ export default function Home() {
               }
               if (currentUser.role === "admin") {
                 addToast("Administrators cannot register for events. Please use a student account.", "warning");
+                return;
+              }
+              const alreadyReg = selectedEvent.isTeamEvent
+                ? Object.values(teams).some((t) => t.eventId === selectedEvent.id && t.members.includes(currentUser.id))
+                : (eventRegistrations[selectedEvent.id] || []).some((r) => r.userId === currentUser.id);
+              if (alreadyReg) {
+                addToast("You are already registered for this event.", "warning");
                 return;
               }
               setCurrentEvent(selectedEvent);
@@ -828,6 +849,7 @@ export default function Home() {
             users={users}
             setUsers={setUsers}
             teams={teams}
+            setTeams={setTeams}
             eventRegistrations={eventRegistrations}
             enquiries={enquiries}
             onRespondEnquiry={handleRespondEnquiry}

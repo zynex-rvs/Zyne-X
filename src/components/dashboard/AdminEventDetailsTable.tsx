@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Event, User, Team, Registration } from "@/types";
-import { ChevronDown, ChevronUp, Users, User as UserIcon, Search, Filter } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, User as UserIcon, Search, Filter, Trash2 } from "lucide-react";
 import { Button } from "../ui/Button";
 
 interface AdminEventDetailsTableProps {
@@ -10,6 +10,7 @@ interface AdminEventDetailsTableProps {
   eventRegistrations: Record<string, Registration[]>;
   expandedEventId: string | null;
   setExpandedEventId: (id: string | null) => void;
+  onDeleteTeam?: (teamCode: string) => void;
 }
 
 export default function AdminEventDetailsTable({
@@ -18,7 +19,8 @@ export default function AdminEventDetailsTable({
   teams,
   eventRegistrations,
   expandedEventId,
-  setExpandedEventId
+  setExpandedEventId,
+  onDeleteTeam
 }: AdminEventDetailsTableProps) {
   const [expandedTeamCode, setExpandedTeamCode] = useState<string | null>(null);
   
@@ -149,12 +151,23 @@ export default function AdminEventDetailsTable({
                                 <h5 className="text-white font-bold text-sm">{team.teamName} <span className="text-slate-500 font-mono text-xs ml-2">({team.teamCode})</span></h5>
                                 <p className="text-xs text-slate-400 mt-1">{team.members.length} Members</p>
                               </div>
-                              <button 
-                                onClick={() => setExpandedTeamCode(isTeamExpanded ? null : team.teamCode)}
-                                className="px-3 py-1.5 bg-white/10 text-white/70 hover:bg-white/10 hover:text-white border border-white/20/30 rounded text-xs font-bold uppercase transition-colors"
-                              >
-                                {isTeamExpanded ? "Hide Details" : "View"}
-                              </button>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => setExpandedTeamCode(isTeamExpanded ? null : team.teamCode)}
+                                  className="px-3 py-1.5 bg-white/10 text-white/70 hover:bg-white/10 hover:text-white border border-white/20/30 rounded text-xs font-bold uppercase transition-colors"
+                                >
+                                  {isTeamExpanded ? "Hide Details" : "View"}
+                                </button>
+                                {onDeleteTeam && (
+                                  <button 
+                                    onClick={() => onDeleteTeam(team.teamCode)}
+                                    className="px-2 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/30 rounded text-xs transition-colors flex items-center justify-center"
+                                    title="Delete Team"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             
                             {isTeamExpanded ? (

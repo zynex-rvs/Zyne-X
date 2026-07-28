@@ -20,6 +20,7 @@ interface AdminDashboardProps {
   users: User[];
   setUsers: (val: User[]) => void;
   teams: Record<string, Team>;
+  setTeams: (val: Record<string, Team>) => void;
   eventRegistrations: Record<string, Registration[]>;
   enquiries: Enquiry[];
   onRespondEnquiry: (idx: number, reply: string) => void;
@@ -33,7 +34,7 @@ export default function AdminDashboard({
   nexauraAdministrators, setNexauraAdministrators,
   clubs, setClubs,
   users, setUsers,
-  teams,
+  teams, setTeams,
   eventRegistrations,
   enquiries,
   onRespondEnquiry,
@@ -130,6 +131,18 @@ export default function AdminDashboard({
       return;
     }
     setUsers(users.filter(u => u.id !== id));
+  };
+
+  const handleDeleteTeam = async (teamCode: string) => {
+    if (!confirm("Are you sure you want to delete this team?")) return;
+    const { error } = await supabase.from("teams").delete().eq("teamCode", teamCode);
+    if (error) {
+      alert("Failed to delete team: " + error.message);
+      return;
+    }
+    const nextTeams = { ...teams };
+    delete nextTeams[teamCode];
+    setTeams(nextTeams);
   };
 
   return (
@@ -367,6 +380,7 @@ export default function AdminDashboard({
           eventRegistrations={eventRegistrations}
           expandedEventId={expandedEventId}
           setExpandedEventId={setExpandedEventId}
+          onDeleteTeam={handleDeleteTeam}
         />
       )}
 
