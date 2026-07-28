@@ -21,7 +21,7 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   department: z.string().min(1, "Department is required"),
   year: z.string().min(1, "Academic year is required"),
-  photo: z.any().optional(),
+  photo: z.any().refine((files) => files && files.length > 0, "Photo is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {

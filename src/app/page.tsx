@@ -113,6 +113,9 @@ export default function Home() {
         if (storedUser) {
           parsedUser = JSON.parse(storedUser);
           setCurrentUser(parsedUser);
+          if (parsedUser.role !== "admin" && !parsedUser.image) {
+            setActiveModal("upload-photo");
+          }
         }
 
         // Unblock the UI rendering immediately after core data is loaded!
@@ -137,7 +140,12 @@ export default function Home() {
           setUsers(usersData);
           if (parsedUser) {
             const freshUser = usersData.find(u => u.id === parsedUser.id);
-            if (freshUser) setCurrentUser(freshUser);
+            if (freshUser) {
+              setCurrentUser(freshUser);
+              if (freshUser.role !== "admin" && !freshUser.image) {
+                setActiveModal("upload-photo");
+              }
+            }
           }
         }
         if (enqData) setEnquiries(enqData);
@@ -256,7 +264,11 @@ export default function Home() {
     if (user) {
       setCurrentUser(user);
       localStorage.setItem("zynex_current_user", JSON.stringify(user));
-      setActiveModal(null);
+      if (user.role !== "admin" && !user.image) {
+        setActiveModal("upload-photo");
+      } else {
+        setActiveModal(null);
+      }
       setViewMode("user-dashboard");
       setSelectedEvent(null);
       addToast(`Welcome back, ${user.name}!`, "success");
@@ -272,6 +284,46 @@ export default function Home() {
       return false;
     }
 
+    let photoBase64 = null;
+    if (data.photo && data.photo.length > 0) {
+      const file = data.photo[0];
+      photoBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              const MAX_WIDTH = 300;
+              const MAX_HEIGHT = 300;
+              let width = img.width;
+              let height = img.height;
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx?.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL("image/jpeg", 0.7));
+            };
+            img.src = reader.result;
+          } else {
+            resolve(null);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     const newUser = {
       regNo: data.regNo.toUpperCase(),
       name: data.name.toUpperCase(),
@@ -281,6 +333,7 @@ export default function Home() {
       year: data.year,
       role: "member",
       password: data.password,
+      image: photoBase64,
     };
 
     const { data: insertedUser, error } = await supabase.from("users").insert(newUser).select().single();
@@ -902,6 +955,63 @@ export default function Home() {
         onRejectInvite={handleRejectInvite}
         onMarkAllRead={handleMarkAllRead}
       />
+
+      {activeModal === "upload-photo" && currentUser && !currentUser.image && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="w-full max-w-md neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-hidden z-10 flex flex-col gap-6 text-center">
+            <h2 className="text-2xl font-bold font-outfit text-white">Upload Your Photo</h2>
+            <p className="text-slate-400 text-sm">
+              Please upload a profile photo to continue using the dashboard. It is mandatory for event registrations.
+            </p>
+            <div className="flex justify-center">
+              <label className="cursor-pointer">
+                <div className="w-32 h-32 rounded-full border-2 border-dashed border-white/20 hover:border-cyan-500/50 flex flex-col items-center justify-center gap-2 transition-colors bg-white/5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/50"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                  <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">Select Photo</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        if (typeof reader.result === "string") {
+                          const img = new Image();
+                          img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            const MAX_WIDTH = 300;
+                            const MAX_HEIGHT = 300;
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > height) {
+                              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            } else {
+                              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext("2d");
+                            ctx?.drawImage(img, 0, 0, width, height);
+                            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+                            handleUploadPhoto(compressedBase64);
+                            setActiveModal(null);
+                          };
+                          img.src = reader.result;
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification Container */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
