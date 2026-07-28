@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { User, Event, Team, Registration, Enquiry, Club, Administrator } from "@/types";
-import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2, Edit } from "lucide-react";
+import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2, Edit, Camera } from "lucide-react";
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
@@ -58,6 +58,7 @@ export default function AdminDashboard({
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [editingUserData, setEditingUserData] = useState<User | null>(null);
   const [cropperState, setCropperState] = useState<{ image: string, userId: string } | null>(null);
 
   const handleCropComplete = async (base64: string) => {
@@ -379,6 +380,9 @@ export default function AdminDashboard({
                       <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px]" onClick={() => setViewingUser(u)}>
                         <Eye className="w-3.5 h-3.5 mr-1" /> View
                       </Button>
+                      <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px] text-amber-400 hover:text-amber-300 hover:bg-amber-500/10" onClick={() => setEditingUserData(u)}>
+                        <Edit className="w-3.5 h-3.5 mr-1" /> Edit
+                      </Button>
                       <Button variant="ghost" size="sm" className="px-2 py-1 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => handleDeleteUser(u.id)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -546,6 +550,113 @@ export default function AdminDashboard({
           </div>
         </div>
       )}
+
+      {/* Edit User Modal */}
+      {editingUserData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setEditingUserData(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold font-outfit text-white mb-6 border-b border-white/10 pb-4">Edit Member Data</h3>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const { error } = await supabase.from('users').update({
+                name: editingUserData.name,
+                email: editingUserData.email,
+                mobile: editingUserData.mobile,
+                department: editingUserData.department,
+                year: editingUserData.year,
+                regNo: editingUserData.regNo,
+                image: editingUserData.image
+              }).eq('id', editingUserData.id);
+
+              if (!error) {
+                setUsers(users.map(u => u.id === editingUserData.id ? editingUserData : u));
+                setEditingUserData(null);
+              }
+            }} className="flex flex-col gap-4">
+              
+              <div className="flex flex-col items-center gap-4 mb-2">
+                <div 
+                  className="w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-white/20 hover:border-cyan-500/50 flex flex-col items-center justify-center cursor-pointer relative group bg-black"
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e: any) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setCropperState({ image: reader.result as string, userId: "edit-modal" });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                >
+                  {editingUserData.image ? (
+                    <>
+                      <img src={editingUserData.image} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Edit className="w-6 h-6 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-white/50 flex flex-col items-center gap-1">
+                      <Camera className="w-6 h-6" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider">Photo</span>
+                    </div>
+                  )}
+                </div>
+                {editingUserData.image && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setCropperState({ image: editingUserData.image!, userId: "edit-modal" })}>
+                    <Edit className="w-3.5 h-3.5 mr-1" /> Re-crop current photo
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Register Number</label>
+                  <input required value={editingUserData.regNo} onChange={e => setEditingUserData({...editingUserData, regNo: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Full Name</label>
+                  <input required value={editingUserData.name} onChange={e => setEditingUserData({...editingUserData, name: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Email</label>
+                  <input required type="email" value={editingUserData.email} onChange={e => setEditingUserData({...editingUserData, email: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Mobile</label>
+                  <input required value={editingUserData.mobile} onChange={e => setEditingUserData({...editingUserData, mobile: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Department</label>
+                  <input required value={editingUserData.department} onChange={e => setEditingUserData({...editingUserData, department: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase">Year</label>
+                  <input required value={editingUserData.year} onChange={e => setEditingUserData({...editingUserData, year: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
+                </div>
+              </div>
+              
+              <Button type="submit" variant="primary" className="w-full mt-4">
+                Save Changes
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {cropperState && (
         <ImageCropperModal
           imageSrc={cropperState.image}
