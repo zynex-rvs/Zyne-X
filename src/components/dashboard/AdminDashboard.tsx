@@ -8,6 +8,7 @@ import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
 import ImageCropperModal from "../modals/ImageCropperModal";
 import { supabase } from "@/lib/supabaseClient";
+import { uploadImageToCloudinary } from "@/lib/uploadImage";
 
 interface AdminDashboardProps {
   events: Event[];
@@ -63,18 +64,22 @@ export default function AdminDashboard({
 
   const handleCropComplete = async (base64: string) => {
     if (!cropperState) return;
+
+    // Upload to Cloudinary
+    const cloudUrl = await uploadImageToCloudinary(base64);
+    const finalImage = cloudUrl || base64;
     
     if (cropperState.userId === "edit-modal") {
       if (editingUserData) {
-        setEditingUserData({ ...editingUserData, image: base64 });
+        setEditingUserData({ ...editingUserData, image: finalImage });
       }
       setCropperState(null);
       return;
     }
 
-    setUsers(users.map(u => u.id === cropperState.userId ? { ...u, image: base64 } : u));
+    setUsers(users.map(u => u.id === cropperState.userId ? { ...u, image: finalImage } : u));
     
-    const { error } = await supabase.from('users').update({ image: base64 }).eq('id', cropperState.userId);
+    const { error } = await supabase.from('users').update({ image: finalImage }).eq('id', cropperState.userId);
     if (error) console.error("Error updating user photo:", error);
     
     setCropperState(null);

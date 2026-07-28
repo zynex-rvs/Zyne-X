@@ -21,6 +21,7 @@ import EditProfileModal from "@/components/modals/EditProfileModal";
 import EventRegisterModal from "@/components/modals/EventRegisterModal";
 import NotificationPanel from "@/components/modals/NotificationPanel";
 import ImageCropperModal from "@/components/modals/ImageCropperModal";
+import { uploadImageToCloudinary } from "@/lib/uploadImage";
 import Footer from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
 import { User, Event, Team as TeamType, Registration, Notification, Enquiry as EnquiryType, Club, Administrator } from "@/types";
@@ -329,6 +330,12 @@ export default function Home() {
         };
         reader.readAsDataURL(file);
       });
+      
+      if (photoBase64) {
+        // Upload to Cloudinary instead of saving base64 to postgres
+        const cloudUrl = await uploadImageToCloudinary(photoBase64 as string);
+        if (cloudUrl) photoBase64 = cloudUrl;
+      }
     }
 
     const newUser = {
@@ -637,9 +644,14 @@ export default function Home() {
 
   const handleUploadPhoto = async (base64: string) => {
     if (!currentUser) return;
-    const { error } = await supabase.from("users").update({ image: base64 }).eq("id", currentUser.id);
+    
+    // Upload base64 string to Cloudinary
+    const cloudUrl = await uploadImageToCloudinary(base64);
+    const finalImage = cloudUrl || base64; // Fallback to base64 if Cloudinary fails, but typically cloudUrl is used
+    
+    const { error } = await supabase.from("users").update({ image: finalImage }).eq("id", currentUser.id);
     if (!error) {
-      const updated = { ...currentUser, image: base64 };
+      const updated = { ...currentUser, image: finalImage };
       setCurrentUser(updated);
       setUsers(users.map((u) => (u.id === currentUser.id ? updated : u)));
       try {
@@ -940,6 +952,7 @@ export default function Home() {
             onInviteMember={handleInviteMemberByRegNo}
             onTransferLeadership={handleTransferLeadership}
             onRemoveMember={handleRemoveMember}
+            setUsers={setUsers}
           />
         )}
 

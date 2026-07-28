@@ -6,6 +6,7 @@ import { User as UserIcon, BookOpen, Bell, Settings, Award, Edit, Trash2, Camera
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "../ui/Button";
 import ImageCropperModal from "../modals/ImageCropperModal";
+import { uploadImageToCloudinary } from "@/lib/uploadImage";
 
 interface UserDashboardProps {
   currentUser: User;
@@ -20,6 +21,7 @@ interface UserDashboardProps {
   onInviteMember?: (regNo: string, teamCode: string) => void;
   onTransferLeadership?: (teamCode: string, newLeaderId: string) => void;
   onRemoveMember?: (teamCode: string, memberId: string) => void;
+  setUsers: (users: User[]) => void;
 }
 
 export default function UserDashboard({
@@ -35,10 +37,11 @@ export default function UserDashboard({
   onInviteMember,
   onTransferLeadership,
   onRemoveMember,
+  setUsers,
 }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "events">("profile");
   const [cropperImage, setCropperImage] = useState<string | null>(null);
-  const [memberCropperState, setMemberCropperState] = useState<{ image: string, userId: string } | null>(null);
+  const [memberCropperState, setMemberCropperState] = useState<{ isOpen: boolean, imageSrc: string | null, userId: string | null }>({ isOpen: false, imageSrc: null, userId: null });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
@@ -57,19 +60,22 @@ export default function UserDashboard({
   };
 
   const handleMemberCropComplete = async (base64: string) => {
-    if (!memberCropperState) return;
-    
-    // Mutate local state for immediate UI update
+    if (!memberCropperState.userId) return;
+
+    // Upload to Cloudinary first
+    const cloudUrl = await uploadImageToCloudinary(base64);
+    const finalImage = cloudUrl || base64;
+
     const userToUpdate = users.find(u => u.id === memberCropperState.userId);
     if (userToUpdate) {
-      userToUpdate.image = base64;
+      userToUpdate.image = finalImage;
+      setUsers([...users]);
     }
-    
-    // Update Supabase
-    const { error } = await supabase.from('users').update({ image: base64 }).eq('id', memberCropperState.userId);
-    if (error) console.error("Error updating member photo:", error);
-    
-    setMemberCropperState(null);
+
+    const { error } = await supabase.from('users').update({ image: finalImage }).eq('id', memberCropperState.userId);
+    if (!error) {
+      setMemberCropperState({ isOpen: false, userId: null, imageSrc: null });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Trash2, Edit, X, Upload, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import ImageCropperModal from "../modals/ImageCropperModal";
+import { uploadImageToCloudinary } from "@/lib/uploadImage";
 
 interface AdminContentManagerProps {
   events: Event[];
@@ -112,6 +113,14 @@ export default function AdminContentManager({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Intercept any base64 image and upload it to Cloudinary before saving
+    if (formData.image && typeof formData.image === 'string' && formData.image.startsWith("data:image/")) {
+      const cloudUrl = await uploadImageToCloudinary(formData.image);
+      if (cloudUrl) {
+        formData.image = cloudUrl;
+      }
+    }
     
     if (activeTab === "events") {
       const payload: Event = {
