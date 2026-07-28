@@ -13,8 +13,10 @@ import EventsGallery from "@/components/sections/EventsGallery";
 import Enquiry from "@/components/sections/Enquiry";
 import UserDashboard from "@/components/dashboard/UserDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import ModeratorDashboard from "@/components/dashboard/ModeratorDashboard";
 import AuthModal from "@/components/modals/AuthModal";
 import AdminLoginModal from "@/components/modals/AdminLoginModal";
+import ModeratorLoginModal from "@/components/modals/ModeratorLoginModal";
 import EditProfileModal from "@/components/modals/EditProfileModal";
 import EventRegisterModal from "@/components/modals/EventRegisterModal";
 import NotificationPanel from "@/components/modals/NotificationPanel";
@@ -179,7 +181,7 @@ export default function Home() {
   }, []);
 
   // View States
-  const [viewMode, setViewMode] = useState<"landing" | "gallery" | "event-detail" | "user-dashboard" | "admin-dashboard">("landing");
+  const [viewMode, setViewMode] = useState<"landing" | "gallery" | "event-detail" | "user-dashboard" | "admin-dashboard" | "moderator-dashboard">("landing");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   // Modals States
@@ -192,6 +194,9 @@ export default function Home() {
     const handleHash = () => {
       if (window.location.hash === "#admin") {
         setActiveModal("admin-login");
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (window.location.hash === "#moderator") {
+        setActiveModal("moderator-login");
         window.history.replaceState(null, "", window.location.pathname);
       }
     };
@@ -356,8 +361,16 @@ export default function Home() {
   };
 
   const handleAdminLogin = async (id: string, pass: string) => {
+    const email = id.trim().toLowerCase();
+    
+    // Prevent moderator emails from accessing the admin portal
+    if (email.includes("moderator")) {
+      addToast("Access Denied: Moderator accounts cannot access the main Admin portal.", "error");
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: id.trim(),
+      email: email,
       password: pass,
     });
 
@@ -370,7 +383,7 @@ export default function Home() {
     // Construct a synthetic admin session object since they don't have a record in the 'users' table
     const adminUser = {
       id: data.user.id,
-      email: data.user.email || id.trim(),
+      email: data.user.email || email,
       name: "Administrator",
       role: "admin",
       regNo: "ADMIN",
@@ -385,6 +398,45 @@ export default function Home() {
     setViewMode("admin-dashboard");
     setSelectedEvent(null);
     addToast(`Administrator access granted. Welcome ${adminUser.name}.`, "success");
+  };
+
+  const handleModeratorLogin = async (id: string, pass: string) => {
+    const email = id.trim().toLowerCase();
+
+    // Ensure only moderator emails can access this portal
+    if (!email.includes("moderator")) {
+      addToast("Access Denied: Only Moderator accounts can access this portal.", "error");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: pass,
+    });
+
+    if (error || !data.user) {
+      console.error("Moderator Auth login error:", error);
+      addToast("Invalid moderator credentials.", "error");
+      return;
+    }
+
+    const modUser = {
+      id: data.user.id,
+      email: data.user.email || email,
+      name: "Moderator",
+      role: "moderator",
+      regNo: "MODERATOR",
+      mobile: "",
+      department: "System",
+      year: "N/A"
+    };
+
+    setCurrentUser(modUser as User);
+    localStorage.setItem("zynex_current_user", JSON.stringify(modUser));
+    setActiveModal(null);
+    setViewMode("moderator-dashboard");
+    setSelectedEvent(null);
+    addToast(`Moderator access granted.`, "success");
   };
 
   const handleLogout = () => {
@@ -749,6 +801,7 @@ export default function Home() {
         setActiveDashboard={(type) => {
           if (type === "user") setViewMode("user-dashboard");
           else if (type === "admin") setViewMode("admin-dashboard");
+          else if (type === "moderator") setViewMode("moderator-dashboard");
           else setViewMode("landing");
         }}
         setActiveModal={setActiveModal}
@@ -789,8 +842,8 @@ export default function Home() {
                   setActiveModal("login");
                   return;
                 }
-                if (currentUser.role === "admin") {
-                  addToast("Administrators cannot register for events. Please use a student account.", "warning");
+                if (currentUser.role === "admin" || currentUser.role === "moderator") {
+                  addToast("Staff cannot register for events. Please use a student account.", "warning");
                   return;
                 }
                 const alreadyReg = event.isTeamEvent
@@ -828,8 +881,8 @@ export default function Home() {
                 setActiveModal("login");
                 return;
               }
-              if (currentUser.role === "admin") {
-                addToast("Administrators cannot register for events. Please use a student account.", "warning");
+              if (currentUser.role === "admin" || currentUser.role === "moderator") {
+                addToast("Staff cannot register for events. Please use a student account.", "warning");
                 return;
               }
               const alreadyReg = event.isTeamEvent
@@ -855,8 +908,8 @@ export default function Home() {
                 setActiveModal("login");
                 return;
               }
-              if (currentUser.role === "admin") {
-                addToast("Administrators cannot register for events. Please use a student account.", "warning");
+              if (currentUser.role === "admin" || currentUser.role === "moderator") {
+                addToast("Staff cannot register for events. Please use a student account.", "warning");
                 return;
               }
               const alreadyReg = selectedEvent.isTeamEvent
@@ -912,6 +965,16 @@ export default function Home() {
             setAnnouncements={setAnnouncements}
           />
         )}
+
+        {/* Moderator Dashboard */}
+        {viewMode === "moderator-dashboard" && (
+          <ModeratorDashboard
+            events={events}
+            users={users}
+            teams={teams}
+            eventRegistrations={eventRegistrations}
+          />
+        )}
       </main>
 
       <Footer navigateTo={navigateTo} />
@@ -929,6 +992,12 @@ export default function Home() {
         isOpen={activeModal === "admin-login"}
         onClose={() => setActiveModal(null)}
         onAdminLogin={handleAdminLogin}
+      />
+
+      <ModeratorLoginModal
+        isOpen={activeModal === "moderator-login"}
+        onClose={() => setActiveModal(null)}
+        onModeratorLogin={handleModeratorLogin}
       />
 
       <EditProfileModal

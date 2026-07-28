@@ -10,7 +10,7 @@ interface NavbarProps {
   currentUser: User | null;
   unreadCount: number;
   navigateTo: (section: string) => void;
-  setActiveDashboard: (type: 'user' | 'admin' | null) => void;
+  setActiveDashboard: (type: 'user' | 'admin' | 'moderator' | null) => void;
   setActiveModal: (type: string | null) => void;
   setIsNotificationsOpen: (open: boolean) => void;
   logoutUser: () => void;
@@ -159,7 +159,7 @@ export default function Navbar({
             </div>
           ) : (
             <div className="flex items-center gap-2 ml-2 pl-6 border-l border-white/10">
-              {currentUser.role !== "admin" && (
+              {currentUser.role !== "admin" && currentUser.role !== "moderator" && (
                 <Button
                   variant="cyan"
                   size="sm"
@@ -177,6 +177,16 @@ export default function Navbar({
                   onClick={() => { setActiveDashboard("admin"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 >
                   <Shield className="w-4 h-4" /> Admin Panel
+                </Button>
+              )}
+              {currentUser.role === "moderator" && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  onClick={() => { setActiveDashboard("moderator"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                >
+                  <Shield className="w-4 h-4" /> Moderator Panel
                 </Button>
               )}
               <Button
@@ -287,7 +297,7 @@ export default function Navbar({
                   </>
                 ) : (
                   <>
-                    {currentUser.role !== "admin" && (
+                    {currentUser.role !== "admin" && currentUser.role !== "moderator" && (
                       <Button
                         variant="cyan"
                         fullWidth
@@ -303,6 +313,15 @@ export default function Navbar({
                         onClick={() => { setActiveDashboard("admin"); window.scrollTo({ top: 0, behavior: "smooth" }); setMobileMenuOpen(false); }}
                       >
                         Admin Panel
+                      </Button>
+                    )}
+                    {currentUser.role === "moderator" && (
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        onClick={() => { setActiveDashboard("moderator"); window.scrollTo({ top: 0, behavior: "smooth" }); setMobileMenuOpen(false); }}
+                      >
+                        Moderator Panel
                       </Button>
                     )}
                     <Button

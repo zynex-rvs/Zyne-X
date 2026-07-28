@@ -79,6 +79,7 @@ export default function Footer({ navigateTo }: FooterProps) {
             <ul className="flex flex-col gap-4 text-sm">
               {[
                 { name: "Enquiry Desk", onClick: () => navigateTo("enquiry") },
+                { name: "Moderator Portal", onClick: () => { window.location.hash = "#moderator"; } },
                 { name: "Terms of Service", onClick: () => {} },
                 { name: "Privacy Policy", onClick: () => {} }
               ].map((link, idx) => (
