@@ -101,7 +101,7 @@ export default function Team({ admins, subtitle }: TeamProps) {
         
         <div className="admin-scroll-container overflow-x-auto pb-8 no-scrollbar -mx-4 px-4">
           <div className="admin-grid flex gap-8 min-w-max">
-            {(admins || []).map((admin) => (
+            {[...(admins || [])].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)).map((admin) => (
               <AdminCard 
                 key={admin.name} 
                 admin={admin} 

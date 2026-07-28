@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Event, Club, Administrator } from "@/types";
 import { Button } from "../ui/Button";
-import { Trash2, Edit, X, Upload } from "lucide-react";
+import { Trash2, Edit, X, Upload, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface AdminContentManagerProps {
@@ -157,6 +157,7 @@ export default function AdminContentManager({
       if (!payload.linkedin) payload.linkedin = null as any;
       if (!payload.phone) payload.phone = null as any;
       if (!payload.image) delete payload.image; // Keep delete for image to avoid breaking avatar if empty during edit
+      if (modalMode === "add") payload.orderIndex = administrators.length;
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("administrators", payload);
@@ -175,6 +176,7 @@ export default function AdminContentManager({
       if (!payload.linkedin) payload.linkedin = null as any;
       if (!payload.phone) payload.phone = null as any;
       if (!payload.image) delete payload.image;
+      if (modalMode === "add") payload.orderIndex = nexauraAdministrators.length;
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("nexaura_administrators", payload);
@@ -403,8 +405,31 @@ export default function AdminContentManager({
     if (activeTab === "events") return events;
     if (activeTab === "clubs") return clubs;
     if (activeTab === "announcements") return announcements;
-    if (activeTab === "nexaura-admins") return nexauraAdministrators;
-    return administrators;
+    if (activeTab === "nexaura-admins") return [...nexauraAdministrators].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    return [...administrators].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  };
+
+  const handleReorder = async (currentIndex: number, direction: 'up' | 'down') => {
+    const list = getList();
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === list.length - 1) return;
+
+    const newList = [...list];
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    const temp = newList[currentIndex];
+    newList[currentIndex] = newList[swapIndex];
+    newList[swapIndex] = temp;
+
+    const updatedList = newList.map((item: any, idx) => ({ ...item, orderIndex: idx }));
+    
+    if (activeTab === "admins") {
+      setAdministrators(updatedList);
+      await Promise.all(updatedList.map(a => supabase.from("administrators").update({ orderIndex: a.orderIndex }).eq("id", a.id)));
+    } else if (activeTab === "nexaura-admins") {
+      setNexauraAdministrators(updatedList);
+      await Promise.all(updatedList.map(a => supabase.from("nexaura_administrators").update({ orderIndex: a.orderIndex }).eq("id", a.id)));
+    }
   };
 
   return (
@@ -433,6 +458,24 @@ export default function AdminContentManager({
                 </div>
               </div>
               <div className="flex gap-2">
+                {(activeTab === "admins" || activeTab === "nexaura-admins") && (
+                  <>
+                    <button 
+                      onClick={() => handleReorder(i, "up")} 
+                      disabled={i === 0}
+                      className={`p-2 rounded transition-colors ${i === 0 ? "opacity-30 cursor-not-allowed text-white/50" : "bg-white/10 text-white/70 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleReorder(i, "down")} 
+                      disabled={i === getList().length - 1}
+                      className={`p-2 rounded transition-colors ${i === getList().length - 1 ? "opacity-30 cursor-not-allowed text-white/50" : "bg-white/10 text-white/70 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
                 <button onClick={() => openModal("edit", item)} className="p-2 bg-white/10 text-white/70 rounded hover:bg-white/10 hover:text-white transition-colors">
                   <Edit className="w-4 h-4" />
                 </button>

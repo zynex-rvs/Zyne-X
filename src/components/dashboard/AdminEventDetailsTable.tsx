@@ -27,6 +27,7 @@ export default function AdminEventDetailsTable({
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDept, setFilterDept] = useState("All");
+  const [teamSortOrder, setTeamSortOrder] = useState("Default");
   
   const allDepts = ["All", "AI & ML", "AI & DS", "CSE", "CY", "ECE", "MECH", "CIVIL", "AGRI", "AUTO", "MECHATRONICS"];
 
@@ -85,6 +86,20 @@ export default function AdminEventDetailsTable({
               {allDepts.map(d => <option key={d} value={d}>{d === "All" ? "All Departments" : d}</option>)}
             </select>
           </div>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <select
+              value={teamSortOrder}
+              onChange={(e) => setTeamSortOrder(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-black backdrop-blur-md border border-white/10 rounded-lg text-xs focus:outline-none focus:border-cyan-500/50 text-white appearance-none cursor-pointer"
+            >
+              <option value="Default">Default Order</option>
+              <option value="Name A-Z">Team Name A-Z</option>
+              <option value="Name Z-A">Team Name Z-A</option>
+              <option value="Most Members">Most Members</option>
+              <option value="Fewest Members">Fewest Members</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -98,6 +113,17 @@ export default function AdminEventDetailsTable({
           
           if (ev.isTeamEvent) {
             teamsList = Object.values(teams).filter(t => t.eventId === ev.id);
+            
+            if (teamSortOrder === "Name A-Z") {
+              teamsList.sort((a, b) => a.teamName.localeCompare(b.teamName));
+            } else if (teamSortOrder === "Name Z-A") {
+              teamsList.sort((a, b) => b.teamName.localeCompare(a.teamName));
+            } else if (teamSortOrder === "Most Members") {
+              teamsList.sort((a, b) => b.members.length - a.members.length);
+            } else if (teamSortOrder === "Fewest Members") {
+              teamsList.sort((a, b) => a.members.length - b.members.length);
+            }
+
             registeredCount = teamsList.length;
           } else {
             registeredCount = allRegs.length;

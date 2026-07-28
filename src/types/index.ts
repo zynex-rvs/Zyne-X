@@ -92,6 +92,7 @@ export interface Administrator {
   image: string;
   linkedin?: string;
   phone?: string;
+  orderIndex?: number;
 }
 
 export interface Announcement {
