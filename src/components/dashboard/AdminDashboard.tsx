@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { User, Event, Team, Registration, Enquiry, Club, Administrator } from "@/types";
-import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2 } from "lucide-react";
+import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2, Edit } from "lucide-react";
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
