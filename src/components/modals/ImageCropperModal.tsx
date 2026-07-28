@@ -47,9 +47,9 @@ export default function ImageCropperModal({
         return;
       }
 
-      // Max size to prevent massive base64 strings
-      const MAX_WIDTH = 800;
-      const MAX_HEIGHT = 800;
+      // Increased max size for high quality (Cloudinary will optimize the file size)
+      const MAX_WIDTH = 1600;
+      const MAX_HEIGHT = 1600;
 
       let targetWidth = croppedAreaPixels.width;
       let targetHeight = croppedAreaPixels.height;
@@ -75,7 +75,7 @@ export default function ImageCropperModal({
         targetHeight
       );
 
-      const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+      const base64Image = canvas.toDataURL('image/jpeg', 1.0);
       onCropComplete(base64Image);
     } catch (e) {
       console.error(e);

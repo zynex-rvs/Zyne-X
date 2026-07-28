@@ -33,10 +33,8 @@ export const uploadImageToCloudinary = async (base64Image: string): Promise<stri
     const data = await response.json();
     
     // Cloudinary automatically returns a secure_url.
-    // We can inject transformations (w_400,h_400,c_fill,q_auto,f_auto) to aggressively optimize
-    // by manipulating the URL string if desired, or rely on the preset.
-    // Injecting optimizations:
-    const optimizedUrl = data.secure_url.replace("/upload/", "/upload/w_500,h_500,c_limit,q_auto,f_auto/");
+    // We inject transformations to optimize quality and format (q_auto, f_auto) without reducing dimensions
+    const optimizedUrl = data.secure_url.replace("/upload/", "/upload/q_auto,f_auto/");
     return optimizedUrl;
 
   } catch (error) {

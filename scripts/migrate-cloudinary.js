@@ -35,8 +35,8 @@ async function uploadToCloudinary(base64Image) {
     }
 
     const data = await response.json();
-    // Add compression transformations
-    return data.secure_url.replace("/upload/", "/upload/w_500,h_500,c_limit,q_auto,f_auto/");
+    // Add compression transformations but keep original resolution
+    return data.secure_url.replace("/upload/", "/upload/q_auto,f_auto/");
   } catch (err) {
     console.error("Error uploading to Cloudinary:", err);
     return null;
