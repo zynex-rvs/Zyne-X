@@ -630,7 +630,7 @@ export default function AdminDashboard({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-slate-400 font-semibold uppercase">Register Number</label>
                   <input required value={editingUserData.regNo} onChange={e => setEditingUserData({...editingUserData, regNo: e.target.value})} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 outline-none" />
