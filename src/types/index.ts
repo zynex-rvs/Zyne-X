@@ -6,7 +6,7 @@ export interface User {
   mobile: string;
   department: string;
   year: string;
-  role: 'member' | 'admin';
+  role: 'member' | 'admin' | 'moderator';
   password?: string;
   image?: string;
 }
