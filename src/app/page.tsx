@@ -18,6 +18,7 @@ import AdminLoginModal from "@/components/modals/AdminLoginModal";
 import EditProfileModal from "@/components/modals/EditProfileModal";
 import EventRegisterModal from "@/components/modals/EventRegisterModal";
 import NotificationPanel from "@/components/modals/NotificationPanel";
+import ImageCropperModal from "@/components/modals/ImageCropperModal";
 import Footer from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
 import { User, Event, Team as TeamType, Registration, Notification, Enquiry as EnquiryType, Club, Administrator } from "@/types";
@@ -69,6 +70,7 @@ export default function Home() {
   // Try to load currentUser from localStorage as a simple session mechanism
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
 
   // Fetch initial data from Supabase
 
@@ -979,27 +981,7 @@ export default function Home() {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                       if (typeof reader.result === "string") {
-                        const img = new Image();
-                        img.onload = () => {
-                          const canvas = document.createElement("canvas");
-                          const MAX_WIDTH = 300;
-                          const MAX_HEIGHT = 300;
-                          let width = img.width;
-                          let height = img.height;
-                          if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                          } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                          }
-                          canvas.width = width;
-                          canvas.height = height;
-                          const ctx = canvas.getContext("2d");
-                          ctx?.drawImage(img, 0, 0, width, height);
-                          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-                          handleUploadPhoto(compressedBase64);
-                          setActiveModal(null);
-                        };
-                        img.src = reader.result;
+                        setCropperImage(reader.result);
                       }
                     };
                     reader.readAsDataURL(file);
@@ -1020,27 +1002,7 @@ export default function Home() {
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         if (typeof reader.result === "string") {
-                          const img = new Image();
-                          img.onload = () => {
-                            const canvas = document.createElement("canvas");
-                            const MAX_WIDTH = 300;
-                            const MAX_HEIGHT = 300;
-                            let width = img.width;
-                            let height = img.height;
-                            if (width > height) {
-                              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                            } else {
-                              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                            }
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext("2d");
-                            ctx?.drawImage(img, 0, 0, width, height);
-                            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-                            handleUploadPhoto(compressedBase64);
-                            setActiveModal(null);
-                          };
-                          img.src = reader.result;
+                          setCropperImage(reader.result);
                         }
                       };
                       reader.readAsDataURL(file);

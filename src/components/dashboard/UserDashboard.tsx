@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { User, Event, Team } from "@/types";
 import { User as UserIcon, BookOpen, Bell, Settings, Award, Edit, Trash2, Camera, ShieldAlert } from "lucide-react";
 import { Button } from "../ui/Button";
+import ImageCropperModal from "../modals/ImageCropperModal";
 
 interface UserDashboardProps {
   currentUser: User;
@@ -35,45 +36,22 @@ export default function UserDashboard({
   onRemoveMember,
 }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "events">("profile");
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       if (typeof reader.result === "string") {
-        // Compress the image before uploading
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 300;
-          const MAX_HEIGHT = 300;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Get compressed base64 (quality 0.7)
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-          onUploadPhoto(compressedBase64);
-        };
-        img.src = reader.result;
+        setCropperImage(reader.result);
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (base64: string) => {
+    onUploadPhoto(base64);
+    setCropperImage(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +172,6 @@ export default function UserDashboard({
                       src={currentUser.image}
                       alt={currentUser.name}
                       className="w-full h-full object-cover"
-                      style={{ objectPosition: currentUser.imagePosition || "center" }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-white/20/20 to-transparent/20 flex items-center justify-center text-4xl font-bold tracking-wider text-white">
@@ -437,6 +414,15 @@ export default function UserDashboard({
         </div>
 
       </div>
+
+      {cropperImage && (
+        <ImageCropperModal
+          imageSrc={cropperImage}
+          onCropComplete={handleCropComplete}
+          onClose={() => setCropperImage(null)}
+          aspect={1}
+        />
+      )}
     </div>
   );
 }

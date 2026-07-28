@@ -9,7 +9,6 @@ export interface User {
   role: 'member' | 'admin';
   password?: string;
   image?: string;
-  imagePosition?: string;
 }
 
 export interface Event {
@@ -29,7 +28,6 @@ export interface Event {
   faqs?: { q: string; a: string }[];
   contacts?: { name: string; role: string; phone: string }[];
   image: string;
-  imagePosition?: string;
   isFeatured?: boolean;
   registrationOpenDate?: string;
   registrationEndDate?: string;
@@ -84,7 +82,6 @@ export interface Club {
   description: string;
   icon: string;
   image?: string;
-  imagePosition?: string;
 }
 
 export interface Administrator {
@@ -96,7 +93,6 @@ export interface Administrator {
   linkedin?: string;
   phone?: string;
   orderIndex?: number;
-  imagePosition?: string;
 }
 
 export interface Announcement {
@@ -105,6 +101,5 @@ export interface Announcement {
   description: string;
   date: string;
   image: string;
-  imagePosition?: string;
   link?: string;
 }

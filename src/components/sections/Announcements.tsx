@@ -44,7 +44,6 @@ export default function Announcements({ announcements = [] }: AnnouncementsProps
                     src={ann.image} 
                     alt={ann.title}
                     className="w-full h-full object-cover opacity-70 group-hover/card:scale-110 group-hover/card:opacity-100 transition-all duration-700"
-                    style={{ objectPosition: ann.imagePosition || "center" }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
                   

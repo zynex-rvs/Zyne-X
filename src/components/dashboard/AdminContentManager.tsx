@@ -5,6 +5,7 @@ import { Event, Club, Administrator } from "@/types";
 import { Button } from "../ui/Button";
 import { Trash2, Edit, X, Upload, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import ImageCropperModal from "../modals/ImageCropperModal";
 
 interface AdminContentManagerProps {
   events: Event[];
@@ -35,6 +36,7 @@ export default function AdminContentManager({
   
   // Generic form state
   const [formData, setFormData] = useState<any>({});
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openModal = (mode: "add" | "edit", item?: any) => {
@@ -79,7 +81,7 @@ export default function AdminContentManager({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        handleInputChange("image", reader.result as string);
+        setCropperImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -290,7 +292,7 @@ export default function AdminContentManager({
                 const file = e.dataTransfer.files[0];
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                  handleInputChange("image", reader.result as string);
+                  setCropperImage(reader.result as string);
                 };
                 reader.readAsDataURL(file);
               }
@@ -305,20 +307,6 @@ export default function AdminContentManager({
             </Button>
             <span className="text-xs text-slate-500 hidden md:inline-block">or drag and drop here</span>
           </div>
-          {formData.image && (
-            <div className="flex items-center gap-2 mt-2">
-              <label className="text-xs text-slate-400 font-semibold uppercase">Image Alignment:</label>
-              <select
-                value={formData.imagePosition || "center"}
-                onChange={(e) => handleInputChange("imagePosition", e.target.value)}
-                className="bg-black border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-cyan-500/50"
-              >
-                <option value="top">Top</option>
-                <option value="center">Center</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {(activeTab === "admins" || activeTab === "nexaura-admins") && (
@@ -535,6 +523,18 @@ export default function AdminContentManager({
             </div>
           </div>
         </div>
+      )}
+
+      {cropperImage && (
+        <ImageCropperModal
+          imageSrc={cropperImage}
+          onCropComplete={(base64) => {
+            handleInputChange("image", base64);
+            setCropperImage(null);
+          }}
+          onClose={() => setCropperImage(null)}
+          aspect={(activeTab === "admins" || activeTab === "nexaura-admins") ? 1 : 16/9}
+        />
       )}
     </>
   );

@@ -38,7 +38,6 @@ export default function Clubs({ clubs = [] }: ClubsProps) {
                   src={club.image} 
                   alt={club.name} 
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" 
-                  style={{ objectPosition: club.imagePosition || "center" }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a]">

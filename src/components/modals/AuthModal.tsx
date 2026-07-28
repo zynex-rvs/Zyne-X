@@ -8,6 +8,7 @@ import { X, Mail, Lock, Phone, User as UserIcon, GraduationCap, ChevronRight } f
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import ImageCropperModal from "./ImageCropperModal";
 
 const loginSchema = z.object({
   regNo: z.string().min(1, "Registration number is required"),
@@ -54,6 +55,7 @@ export default function AuthModal({
   const [forgotOtp, setForgotOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
 
   const {
     register: loginRegister,
@@ -206,8 +208,35 @@ export default function AuthModal({
     }
   };
 
+  const handlePhotoSelect = (file?: File) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCropperImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCropComplete = (base64: string) => {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const file = new File([u8arr], "profile.jpg", { type: mime });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    setSignupValue("photo", dataTransfer.files, { shouldValidate: true });
+    setCropperImage(null);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Black backdrop overlay */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -369,19 +398,31 @@ export default function AuthModal({
                   e.preventDefault();
                   e.stopPropagation();
                   if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    setSignupValue("photo", e.dataTransfer.files, { shouldValidate: true });
+                    handlePhotoSelect(e.dataTransfer.files[0]);
                   }
                 }}
                 className="border-2 border-transparent hover:border-dashed hover:border-white/20 rounded-lg transition-colors p-1"
               >
-                <Input
-                  label="Photo"
-                  type="file"
-                  accept="image/*"
-                  error={signupErrors.photo?.message as string}
-                  {...signupRegister("photo")}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white/70 hover:file:bg-white/10 cursor-pointer p-2"
-                />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-400 font-semibold uppercase ml-1">Photo</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePhotoSelect(file);
+                      }}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white/70 hover:file:bg-white/10 cursor-pointer p-2 w-full text-sm text-slate-400"
+                    />
+                  </div>
+                  {signupErrors.photo && (
+                    <span className="text-xs font-medium text-red-500 mt-0.5 ml-1">
+                      {signupErrors.photo.message as string}
+                    </span>
+                  )}
+                  {signupRegister("photo").name && <input type="hidden" {...signupRegister("photo")} />}
+                </div>
                 <p className="text-xs text-slate-500 mt-1 pl-2">or drag and drop here</p>
               </div>
               <Input
@@ -536,5 +577,15 @@ export default function AuthModal({
         )}
       </motion.div>
     </div>
+    
+    {cropperImage && (
+      <ImageCropperModal
+        imageSrc={cropperImage}
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropperImage(null)}
+        aspect={1}
+      />
+    )}
+    </>
   );
 }
