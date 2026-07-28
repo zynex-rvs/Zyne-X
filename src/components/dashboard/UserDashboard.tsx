@@ -179,11 +179,23 @@ export default function UserDashboard({
                     </div>
                   )}
                   {/* Photo upload overlay */}
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300"
-                  >
-                    <Camera className="w-8 h-8 text-white" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                      className="text-white hover:text-cyan-400 p-2"
+                      title="Upload New"
+                    >
+                      <Camera className="w-6 h-6" />
+                    </button>
+                    {currentUser.image && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setCropperImage(currentUser.image!); }}
+                        className="text-white hover:text-amber-400 p-2"
+                        title="Edit Current"
+                      >
+                        <Edit className="w-6 h-6" />
+                      </button>
+                    )}
                   </div>
                   <input
                     ref={fileInputRef}
