@@ -69,6 +69,7 @@ export default function AuthModal({
     handleSubmit: handleSignupSubmit,
     formState: { errors: signupErrors },
     reset: resetSignup,
+    setValue: setSignupValue,
   } = useForm({
     resolver: zodResolver(signupSchema),
   });
@@ -359,14 +360,30 @@ export default function AuthModal({
                   )}
                 </div>
               </div>
-              <Input
-                label="Photo"
-                type="file"
-                accept="image/*"
-                error={signupErrors.photo?.message as string}
-                {...signupRegister("photo")}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white/70 hover:file:bg-white/10 cursor-pointer p-2"
-              />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    setSignupValue("photo", e.dataTransfer.files, { shouldValidate: true });
+                  }
+                }}
+                className="border-2 border-transparent hover:border-dashed hover:border-white/20 rounded-lg transition-colors p-1"
+              >
+                <Input
+                  label="Photo"
+                  type="file"
+                  accept="image/*"
+                  error={signupErrors.photo?.message as string}
+                  {...signupRegister("photo")}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white/70 hover:file:bg-white/10 cursor-pointer p-2"
+                />
+                <p className="text-xs text-slate-500 mt-1 pl-2">or drag and drop here</p>
+              </div>
               <Input
                 label="Password"
                 type="password"

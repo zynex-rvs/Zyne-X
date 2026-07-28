@@ -277,7 +277,25 @@ export default function AdminContentManager({
         {/* Common Image Upload */}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-slate-400 font-semibold uppercase">Photo / Image</label>
-          <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-4 p-4 border-2 border-dashed border-white/10 rounded-lg hover:border-cyan-500/50 transition-colors bg-white/5"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                const file = e.dataTransfer.files[0];
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  handleInputChange("image", reader.result as string);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          >
             {formData.image && (
               <img src={formData.image} alt="Preview" className="w-16 h-16 rounded-md object-cover border border-white/10" />
             )}
@@ -285,6 +303,7 @@ export default function AdminContentManager({
             <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" /> Upload Image
             </Button>
+            <span className="text-xs text-slate-500 hidden md:inline-block">or drag and drop here</span>
           </div>
         </div>
 

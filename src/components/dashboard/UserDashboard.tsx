@@ -37,45 +37,62 @@ export default function UserDashboard({
   const [activeTab, setActiveTab] = useState<"profile" | "events">("profile");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const processFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        // Compress the image before uploading
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 300;
+          const MAX_HEIGHT = 300;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Get compressed base64 (quality 0.7)
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          onUploadPhoto(compressedBase64);
+        };
+        img.src = reader.result;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          // Compress the image before uploading
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const MAX_WIDTH = 300;
-            const MAX_HEIGHT = 300;
-            let width = img.width;
-            let height = img.height;
+      processFile(file);
+    }
+  };
 
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            // Get compressed base64 (quality 0.7)
-            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-            onUploadPhoto(compressedBase64);
-          };
-          img.src = reader.result;
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
     }
   };
 
@@ -167,7 +184,11 @@ export default function UserDashboard({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Profile image column */}
               <div className="neumorphic-raised p-6 rounded-[2rem] flex flex-col items-center gap-4 text-center">
-                <div className="relative group cursor-pointer w-36 h-36 rounded-full overflow-hidden border-2 border-white/20 shadow-lg">
+                <div 
+                  className="relative group cursor-pointer w-36 h-36 rounded-full overflow-hidden border-2 border-white/20 shadow-lg"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
                   {currentUser.image ? (
                     <img
                       src={currentUser.image}

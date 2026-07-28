@@ -965,7 +965,47 @@ export default function Home() {
               Please upload a profile photo to continue using the dashboard. It is mandatory for event registrations.
             </p>
             <div className="flex justify-center">
-              <label className="cursor-pointer">
+              <label 
+                className="cursor-pointer"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    const file = e.dataTransfer.files[0];
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      if (typeof reader.result === "string") {
+                        const img = new Image();
+                        img.onload = () => {
+                          const canvas = document.createElement("canvas");
+                          const MAX_WIDTH = 300;
+                          const MAX_HEIGHT = 300;
+                          let width = img.width;
+                          let height = img.height;
+                          if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                          } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                          }
+                          canvas.width = width;
+                          canvas.height = height;
+                          const ctx = canvas.getContext("2d");
+                          ctx?.drawImage(img, 0, 0, width, height);
+                          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+                          handleUploadPhoto(compressedBase64);
+                          setActiveModal(null);
+                        };
+                        img.src = reader.result;
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              >
                 <div className="w-32 h-32 rounded-full border-2 border-dashed border-white/20 hover:border-cyan-500/50 flex flex-col items-center justify-center gap-2 transition-colors bg-white/5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/50"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                   <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">Select Photo</span>
