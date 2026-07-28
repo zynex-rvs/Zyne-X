@@ -64,6 +64,14 @@ export default function AdminDashboard({
   const handleCropComplete = async (base64: string) => {
     if (!cropperState) return;
     
+    if (cropperState.userId === "edit-modal") {
+      if (editingUserData) {
+        setEditingUserData({ ...editingUserData, image: base64 });
+      }
+      setCropperState(null);
+      return;
+    }
+
     setUsers(users.map(u => u.id === cropperState.userId ? { ...u, image: base64 } : u));
     
     const { error } = await supabase.from('users').update({ image: base64 }).eq('id', cropperState.userId);
