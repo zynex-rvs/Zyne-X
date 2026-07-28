@@ -827,20 +827,22 @@ export default function Home() {
   return (
     <>
       <Background />
-      <Navbar
-        currentUser={currentUser}
-        unreadCount={unreadCount}
-        navigateTo={navigateTo}
-        setActiveDashboard={(type) => {
-          if (type === "user") setViewMode("user-dashboard");
-          else if (type === "admin") setViewMode("admin-dashboard");
-          else if (type === "moderator") setViewMode("moderator-dashboard");
-          else setViewMode("landing");
-        }}
-        setActiveModal={setActiveModal}
-        setIsNotificationsOpen={setIsNotificationsOpen}
-        logoutUser={handleLogout}
-      />
+      {viewMode !== "admin-dashboard" && (
+        <Navbar
+          currentUser={currentUser}
+          unreadCount={unreadCount}
+          navigateTo={navigateTo}
+          setActiveDashboard={(type) => {
+            if (type === "user") setViewMode("user-dashboard");
+            else if (type === "admin") setViewMode("admin-dashboard");
+            else if (type === "moderator") setViewMode("moderator-dashboard");
+            else setViewMode("landing");
+          }}
+          setActiveModal={setActiveModal}
+          setIsNotificationsOpen={setIsNotificationsOpen}
+          logoutUser={handleLogout}
+        />
+      )}
 
       {/* Full-width Hero section for landing view */}
       {viewMode === "landing" && (
