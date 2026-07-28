@@ -114,7 +114,7 @@ export default function AdminContentManager({
     if (activeTab === "events") {
       const payload: Event = {
         ...formData,
-        id: editingId || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        id: editingId || crypto.randomUUID(),
         rules: typeof formData.rules === "string" ? formData.rules.split("\n").filter(Boolean) : (formData.rules || []),
         timeline: typeof formData.timeline === "string" ? formData.timeline.split("\n").filter(Boolean) : (formData.timeline || []),
         teamSize: parseInt(formData.teamSize) || 6,
@@ -135,7 +135,7 @@ export default function AdminContentManager({
     } else if (activeTab === "clubs") {
       const payload: Club = {
         ...formData,
-        id: editingId || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        id: editingId || crypto.randomUUID(),
       };
       if (!payload.subtitle) payload.subtitle = null as any;
       if (!payload.image) delete payload.image; // Keep delete for image to avoid breaking existing image if empty during edit
@@ -152,7 +152,7 @@ export default function AdminContentManager({
     } else if (activeTab === "admins") {
       const payload: Administrator = {
         ...formData,
-        id: editingId || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        id: editingId || crypto.randomUUID(),
       };
       if (!payload.linkedin) payload.linkedin = null as any;
       if (!payload.phone) payload.phone = null as any;
@@ -171,7 +171,7 @@ export default function AdminContentManager({
     } else if (activeTab === "nexaura-admins") {
       const payload: Administrator = {
         ...formData,
-        id: editingId || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        id: editingId || crypto.randomUUID(),
       };
       if (!payload.linkedin) payload.linkedin = null as any;
       if (!payload.phone) payload.phone = null as any;
@@ -190,7 +190,7 @@ export default function AdminContentManager({
     } else if (activeTab === "announcements") {
       const payload: any = {
         ...formData,
-        id: editingId || formData.title.toLowerCase().replace(/\s+/g, '-'),
+        id: editingId || crypto.randomUUID(),
       };
       if (!payload.link) delete payload.link;
       if (!payload.image) delete payload.image;
