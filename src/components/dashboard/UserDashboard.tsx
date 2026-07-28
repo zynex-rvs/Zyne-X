@@ -336,7 +336,7 @@ export default function UserDashboard({
                                           <img src={userObj.image} alt={userObj.name} className="w-full h-full rounded-full object-cover border border-white/10" />
                                           <div 
                                             className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full transition-opacity"
-                                            onClick={(e) => { e.stopPropagation(); setMemberCropperState({ image: userObj.image!, userId: userObj.id }); }}
+                                            onClick={(e) => { e.stopPropagation(); setMemberCropperState({ isOpen: true, imageSrc: userObj.image!, userId: userObj.id }); }}
                                             title="Edit Image"
                                           >
                                             <Edit className="w-3 h-3 text-white" />
@@ -468,11 +468,11 @@ export default function UserDashboard({
           aspect={1}
         />
       )}
-      {memberCropperState && (
+      {memberCropperState.isOpen && (
         <ImageCropperModal
-          imageSrc={memberCropperState.image}
+          imageSrc={memberCropperState.imageSrc!}
           onCropComplete={handleMemberCropComplete}
-          onClose={() => setMemberCropperState(null)}
+          onClose={() => setMemberCropperState({ isOpen: false, imageSrc: null, userId: null })}
           aspect={1}
         />
       )}

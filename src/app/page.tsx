@@ -22,6 +22,7 @@ import EventRegisterModal from "@/components/modals/EventRegisterModal";
 import NotificationPanel from "@/components/modals/NotificationPanel";
 import ImageCropperModal from "@/components/modals/ImageCropperModal";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
+import { registerUser, loginUser } from "@/app/actions/auth";
 import Footer from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
 import { User, Event, Team as TeamType, Registration, Notification, Enquiry as EnquiryType, Club, Administrator } from "@/types";
@@ -79,7 +80,7 @@ export default function Home() {
 
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchPublicData = async () => {
       try {
         // 1. Fetch lightweight public data required for the landing page
         const [
@@ -97,11 +98,10 @@ export default function Home() {
         ]);
 
         if (eventsData) {
-          // Sort events by createdAt descending (newest first)
           const sorted = [...eventsData].sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
             const dateB = new Date(b.createdAt || 0).getTime();
-            return dateB - dateA; // Descending
+            return dateB - dateA;
           });
           setEvents(sorted);
         }
@@ -112,7 +112,7 @@ export default function Home() {
           setAnnouncements(announcementsData);
         }
 
-        // Restore user session immediately using localStorage data
+        // Restore user session
         const storedUser = localStorage.getItem("zynex_current_user");
         let parsedUser = null;
         if (storedUser) {
@@ -121,65 +121,68 @@ export default function Home() {
           if (parsedUser.role !== "admin" && !parsedUser.image) {
             setActiveModal("upload-photo");
           }
+          // If we have a user session, go ahead and load dashboard data in background
+          loadDashboardData(parsedUser);
         }
 
-        // Unblock the UI rendering immediately after core data is loaded!
         setIsLoaded(true);
-
-        // 2. Fetch heavier admin and dashboard data in the background
-        const [
-          { data: usersData },
-          { data: teamsData },
-          { data: regsData },
-          { data: enqData },
-          { data: notifsData }
-        ] = await Promise.all([
-          supabase.from("users").select("*"),
-          supabase.from("teams").select("*"),
-          supabase.from("registrations").select("*"),
-          supabase.from("enquiries").select("*"),
-          supabase.from("notifications").select("*")
-        ]);
-
-        if (usersData) {
-          setUsers(usersData);
-          if (parsedUser) {
-            const freshUser = usersData.find(u => u.id === parsedUser.id);
-            if (freshUser) {
-              setCurrentUser(freshUser);
-              if (freshUser.role !== "admin" && !freshUser.image) {
-                setActiveModal("upload-photo");
-              }
-            }
-          }
-        }
-        if (enqData) setEnquiries(enqData);
-        if (notifsData) setNotifications(notifsData);
-
-        if (teamsData) {
-          const teamsMap: Record<string, TeamType> = {};
-          teamsData.forEach(t => {
-            teamsMap[t.teamCode] = t;
-          });
-          setTeams(teamsMap);
-        }
-
-        if (regsData) {
-          const regsMap: Record<string, Registration[]> = {};
-          regsData.forEach(r => {
-            if (!regsMap[r.eventId]) regsMap[r.eventId] = [];
-            regsMap[r.eventId].push(r);
-          });
-          setEventRegistrations(regsMap);
-        }
-
       } catch (err) {
-        console.error("Error fetching data from Supabase:", err);
+        console.error("Error fetching public data:", err);
         setIsLoaded(true);
       }
     };
-    fetchData();
+    fetchPublicData();
   }, []);
+
+  // Lazy load dashboard data only when logged in or needed
+  const loadDashboardData = async (userObj: User | null = currentUser) => {
+    try {
+      const [
+        { data: usersData },
+        { data: teamsData },
+        { data: regsData },
+        { data: enqData },
+        { data: notifsData }
+      ] = await Promise.all([
+        supabase.from("users").select("*"),
+        supabase.from("teams").select("*"),
+        supabase.from("registrations").select("*"),
+        supabase.from("enquiries").select("*"),
+        supabase.from("notifications").select("*")
+      ]);
+
+      if (usersData) {
+        setUsers(usersData);
+        if (userObj) {
+          const freshUser = usersData.find(u => u.id === userObj.id);
+          if (freshUser) {
+            setCurrentUser(freshUser);
+          }
+        }
+      }
+      if (enqData) setEnquiries(enqData);
+      if (notifsData) setNotifications(notifsData);
+
+      if (teamsData) {
+        const teamsMap: Record<string, import("@/types").Team> = {};
+        teamsData.forEach(t => {
+          teamsMap[t.teamCode] = t;
+        });
+        setTeams(teamsMap);
+      }
+
+      if (regsData) {
+        const regsMap: Record<string, Registration[]> = {};
+        regsData.forEach(r => {
+          if (!regsMap[r.eventId]) regsMap[r.eventId] = [];
+          regsMap[r.eventId].push(r);
+        });
+        setEventRegistrations(regsMap);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    }
+  };
 
   // View States
   const [viewMode, setViewMode] = useState<"landing" | "gallery" | "event-detail" | "user-dashboard" | "admin-dashboard" | "moderator-dashboard">("landing");
@@ -268,21 +271,28 @@ export default function Home() {
   }, [scrollToSection]);
 
   const handleLogin = async (regNo: string, pass: string) => {
-    const { data: user, error } = await supabase.from("users").select("*").ilike("regNo", regNo.trim()).eq("password", pass).single();
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem("zynex_current_user", JSON.stringify(user));
-      if (user.role !== "admin" && !user.image) {
-        setActiveModal("upload-photo");
-      } else {
-        setActiveModal(null);
-      }
-      setViewMode("user-dashboard");
-      setSelectedEvent(null);
-      addToast(`Welcome back, ${user.name}!`, "success");
-    } else {
-      addToast("Invalid credentials. Please check your Register Number and password.", "error");
+    const result = await loginUser(regNo, pass);
+    
+    if (result.error || !result.user) {
+      addToast(result.error || "Login failed.", "error");
+      return;
     }
+
+    const user = result.user;
+    setCurrentUser(user as User);
+    localStorage.setItem("zynex_current_user", JSON.stringify(user));
+    
+    // Load heavy dashboard data now that they are logged in
+    loadDashboardData(user as User);
+
+    if (user.role !== "admin" && !user.image) {
+      setActiveModal("upload-photo");
+    } else {
+      setActiveModal(null);
+    }
+    setViewMode("user-dashboard");
+    setSelectedEvent(null);
+    addToast(`Welcome back, ${user.name}!`, "success");
   };
 
   const handleSignup = async (data: any) => {
@@ -345,25 +355,28 @@ export default function Home() {
       mobile: data.mobile,
       department: data.department,
       year: data.year,
-      role: "member",
       password: data.password,
       image: photoBase64,
     };
 
-    const { data: insertedUser, error } = await supabase.from("users").insert(newUser).select().single();
-    
-    if (error) {
-       addToast("Failed to create account.", "error");
-       console.error(error);
-       return false;
+    const result = await registerUser(newUser);
+
+    if (result.error || !result.user) {
+      addToast(result.error || "Registration failed.", "error");
+      return false;
     }
 
+    const insertedUser = result.user as User;
     setUsers([...users, insertedUser]);
     setCurrentUser(insertedUser);
     localStorage.setItem("zynex_current_user", JSON.stringify(insertedUser));
+    
+    loadDashboardData(insertedUser);
+
     setActiveModal(null);
-    addToast(`Account created successfully!`, "success");
+    addToast(`Account created successfully! Welcome, ${insertedUser.name}!`, "success");
     setViewMode("user-dashboard");
+    setSelectedEvent(null);
     return true;
   };
 
@@ -401,6 +414,10 @@ export default function Home() {
 
     setCurrentUser(adminUser as User);
     localStorage.setItem("zynex_current_user", JSON.stringify(adminUser));
+    
+    // Load heavy dashboard data now that admin is logged in
+    loadDashboardData(adminUser as User);
+
     setActiveModal(null);
     setViewMode("admin-dashboard");
     setSelectedEvent(null);
@@ -440,6 +457,10 @@ export default function Home() {
 
     setCurrentUser(modUser as User);
     localStorage.setItem("zynex_current_user", JSON.stringify(modUser));
+    
+    // Load heavy dashboard data now that moderator is logged in
+    loadDashboardData(modUser as User);
+
     setActiveModal(null);
     setViewMode("moderator-dashboard");
     setSelectedEvent(null);
