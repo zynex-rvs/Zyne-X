@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { User, Event, Team } from "@/types";
 import { User as UserIcon, BookOpen, Bell, Settings, Award, Edit, Trash2, Camera, ShieldAlert } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "../ui/Button";
 import ImageCropperModal from "../modals/ImageCropperModal";
 
@@ -37,6 +38,7 @@ export default function UserDashboard({
 }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "events">("profile");
   const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [memberCropperState, setMemberCropperState] = useState<{ image: string, userId: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
@@ -52,6 +54,22 @@ export default function UserDashboard({
   const handleCropComplete = (base64: string) => {
     onUploadPhoto(base64);
     setCropperImage(null);
+  };
+
+  const handleMemberCropComplete = async (base64: string) => {
+    if (!memberCropperState) return;
+    
+    // Mutate local state for immediate UI update
+    const userToUpdate = users.find(u => u.id === memberCropperState.userId);
+    if (userToUpdate) {
+      userToUpdate.image = base64;
+    }
+    
+    // Update Supabase
+    const { error } = await supabase.from('users').update({ image: base64 }).eq('id', memberCropperState.userId);
+    if (error) console.error("Error updating member photo:", error);
+    
+    setMemberCropperState(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,7 +326,16 @@ export default function UserDashboard({
                                     <div className="flex items-center gap-2">
                                       <span className="text-slate-500 w-3">{idx + 1}.</span>
                                       {userObj?.image ? (
-                                        <img src={userObj.image} alt={userObj.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                                        <div className="relative group w-6 h-6 cursor-pointer flex-shrink-0">
+                                          <img src={userObj.image} alt={userObj.name} className="w-full h-full rounded-full object-cover border border-white/10" />
+                                          <div 
+                                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full transition-opacity"
+                                            onClick={(e) => { e.stopPropagation(); setMemberCropperState({ image: userObj.image!, userId: userObj.id }); }}
+                                            title="Edit Image"
+                                          >
+                                            <Edit className="w-3 h-3 text-white" />
+                                          </div>
+                                        </div>
                                       ) : (
                                         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/20/20 to-transparent/20 flex items-center justify-center text-[8px] font-bold text-white border border-white/10">
                                           {userObj?.name?.substring(0, 2).toUpperCase() || "?"}
@@ -432,6 +459,14 @@ export default function UserDashboard({
           imageSrc={cropperImage}
           onCropComplete={handleCropComplete}
           onClose={() => setCropperImage(null)}
+          aspect={1}
+        />
+      )}
+      {memberCropperState && (
+        <ImageCropperModal
+          imageSrc={memberCropperState.image}
+          onCropComplete={handleMemberCropComplete}
+          onClose={() => setMemberCropperState(null)}
           aspect={1}
         />
       )}

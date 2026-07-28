@@ -6,6 +6,7 @@ import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckC
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
+import ImageCropperModal from "../modals/ImageCropperModal";
 import { supabase } from "@/lib/supabaseClient";
 
 interface AdminDashboardProps {
@@ -57,6 +58,18 @@ export default function AdminDashboard({
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [cropperState, setCropperState] = useState<{ image: string, userId: string } | null>(null);
+
+  const handleCropComplete = async (base64: string) => {
+    if (!cropperState) return;
+    
+    setUsers(users.map(u => u.id === cropperState.userId ? { ...u, image: base64 } : u));
+    
+    const { error } = await supabase.from('users').update({ image: base64 }).eq('id', cropperState.userId);
+    if (error) console.error("Error updating user photo:", error);
+    
+    setCropperState(null);
+  };
 
   // Statistics calculation
   const totalUsers = users.length;
@@ -340,7 +353,16 @@ export default function AdminDashboard({
                     <td className="p-3 font-bold text-white">
                       <div className="flex items-center gap-2">
                         {u.image ? (
-                          <img src={u.image} alt={u.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                          <div className="relative group w-6 h-6 cursor-pointer flex-shrink-0">
+                            <img src={u.image} alt={u.name} className="w-full h-full rounded-full object-cover border border-white/10" />
+                            <div 
+                              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full transition-opacity"
+                              onClick={(e) => { e.stopPropagation(); setCropperState({ image: u.image!, userId: u.id }); }}
+                              title="Edit Image"
+                            >
+                              <Edit className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
                         ) : (
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/20/20 to-transparent/20 flex items-center justify-center text-[9px] font-bold text-white border border-white/10">
                             {u.name.substring(0, 2).toUpperCase()}
@@ -523,6 +545,14 @@ export default function AdminDashboard({
             </div>
           </div>
         </div>
+      )}
+      {cropperState && (
+        <ImageCropperModal
+          imageSrc={cropperState.image}
+          onCropComplete={handleCropComplete}
+          onClose={() => setCropperState(null)}
+          aspect={1}
+        />
       )}
     </div>
   );
