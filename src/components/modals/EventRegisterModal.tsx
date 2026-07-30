@@ -52,8 +52,8 @@ export default function EventRegisterModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
 
     if (event.isTeamEvent) {
       if (!teamName || !leaderName) {
@@ -131,7 +131,7 @@ export default function EventRegisterModal({
                 />
               </>
             ) : (
-              <div className="p-3 rounded-lg bg-white/10 border border-white/20/20 flex gap-2.5 items-start text-xs text-slate-400 mb-2">
+              <div className="p-3 rounded-lg bg-white/10 border border-white/20 flex gap-2.5 items-start text-xs text-slate-400 mb-2">
                 <Award className="w-4 h-4 text-white/70 shrink-0 mt-0.5" />
                 <span>
                   This is a solo participant competition. Your details are already synced with your Zyne-X account.
@@ -139,7 +139,7 @@ export default function EventRegisterModal({
               </div>
             )}
 
-            <Button type="submit" variant="primary" fullWidth className="mt-4">
+            <Button type="button" onClick={handleSubmit} variant="primary" fullWidth className="mt-4">
               Complete Registration
             </Button>
           </form>

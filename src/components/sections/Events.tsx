@@ -171,8 +171,9 @@ function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCard
   }, [event.date, event.time, event.registrationEndDate]);
 
   return (
-    <div onClick={onViewDetails} className="cursor-pointer h-full relative group transition-transform duration-700 hover:-translate-y-2">
+    <div className="h-full relative group transition-transform duration-700 hover:-translate-y-2">
       <div className="relative flex flex-col h-full rounded-[2rem] overflow-hidden z-10 transition-all duration-500 neumorphic-raised neumorphic-hover-raised">
+        <div onClick={onViewDetails} className="cursor-pointer flex flex-col flex-1">
           <div className="relative h-36 w-full overflow-hidden border-b border-white/5">
             <img 
               src={event.image || "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80"} 
@@ -192,7 +193,7 @@ function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCard
           </div>
 
           {/* Content Body */}
-          <div className="flex-1 p-6 flex flex-col relative">
+          <div className="flex-1 p-6 flex flex-col relative pb-0">
             <h3 className="text-2xl font-heading font-bold text-white tracking-wide group-hover:text-blue-400 transition-colors mb-3 relative z-10 line-clamp-1">
               {event.name}
             </h3>
@@ -242,29 +243,30 @@ function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCard
                 </div>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 mt-8 relative z-10 pt-5 border-t border-white/5 group-hover:border-blue-500/20 transition-colors" onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="flex-1 rounded-xl text-xs bg-white/5 hover:bg-white/10 border border-transparent transition-all" onClick={(e) => { e.stopPropagation(); onViewDetails(); }}>
-                View Details
-              </Button>
-              {status === "upcoming" && (
-                <Button 
-                  size="sm" 
-                  className={`flex-1 rounded-xl text-xs font-bold transition-all border-none ${isRegistered ? "bg-slate-700 hover:bg-slate-700 text-slate-300 opacity-80 cursor-default" : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"}`}
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (!isRegistered) onRegister(); 
-                  }}
-                  disabled={isRegistered}
-                >
-                  {isRegistered ? "Registered" : "Register Now"}
-                </Button>
-              )}
-            </div>
           </div>
-          
         </div>
+
+        {/* Actions */}
+        <div className="p-6 pt-5 mt-8 border-t border-white/5 group-hover:border-blue-500/20 transition-colors">
+          <div className="flex gap-3 relative z-10">
+            <Button variant="ghost" size="sm" className="flex-1 rounded-xl text-xs bg-white/5 hover:bg-white/10 border border-transparent transition-all" onClick={onViewDetails}>
+              View Details
+            </Button>
+            {status === "upcoming" && (
+              <Button 
+                size="sm" 
+                className={`flex-1 rounded-xl text-xs font-bold transition-all border-none ${isRegistered ? "bg-slate-700 hover:bg-slate-700 text-slate-300 opacity-80 cursor-default" : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"}`}
+                onClick={() => { 
+                  if (!isRegistered) onRegister(); 
+                }}
+                disabled={isRegistered}
+              >
+                {isRegistered ? "Registered" : "Register Now"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
