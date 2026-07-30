@@ -232,7 +232,7 @@ export default function Navbar({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="lg:hidden absolute top-[calc(100%+0.5rem)] left-0 w-full neumorphic-raised overflow-hidden rounded-2xl"
+            className="lg:hidden absolute top-[calc(100%+0.5rem)] left-0 w-full max-h-[85vh] neumorphic-raised overflow-y-auto rounded-2xl"
           >
             <div className="px-4 pt-3 pb-6 flex flex-col gap-4">
               <ul className="flex flex-col gap-3 font-medium text-sm">

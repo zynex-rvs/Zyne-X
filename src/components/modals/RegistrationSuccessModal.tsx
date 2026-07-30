@@ -35,7 +35,7 @@ export default function RegistrationSuccessModal({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-[#0f172a] border border-green-500/30 rounded-2xl p-8 max-w-md w-full relative z-10 shadow-[0_0_30px_rgba(34,197,94,0.15)] flex flex-col items-center text-center"
+            className="bg-[#0f172a] max-h-[90vh] overflow-y-auto border border-green-500/30 rounded-2xl p-8 max-w-md w-full relative z-10 shadow-[0_0_30px_rgba(34,197,94,0.15)] flex flex-col items-center text-center"
           >
             <button
               onClick={onClose}

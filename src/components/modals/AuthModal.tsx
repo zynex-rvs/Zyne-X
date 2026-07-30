@@ -251,7 +251,7 @@ export default function AuthModal({
         initial={{ scale: 0.9, y: 15, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 15, opacity: 0 }}
-        className="w-full max-w-md neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-hidden z-10"
+        className="w-full max-w-md max-h-[90vh] neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-y-auto z-10"
       >
         <button
           onClick={onClose}

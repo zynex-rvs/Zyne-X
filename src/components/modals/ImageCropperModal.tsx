@@ -86,7 +86,7 @@ export default function ImageCropperModal({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-2xl bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] relative z-10">
+      <div className="w-full max-w-2xl max-h-[90vh] bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col overflow-y-auto shadow-[0_0_50px_rgba(6,182,212,0.15)] relative z-10">
         
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-white/5">
