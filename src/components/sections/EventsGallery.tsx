@@ -11,6 +11,7 @@ interface EventsGalleryProps {
   onBack: () => void;
   onViewMore: (event: Event) => void;
   onRegister: (event: Event) => void;
+  registeredEventIds: Set<string>;
 }
 
 export default function EventsGallery({
@@ -18,6 +19,7 @@ export default function EventsGallery({
   onBack,
   onViewMore,
   onRegister,
+  registeredEventIds,
 }: EventsGalleryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -68,6 +70,7 @@ export default function EventsGallery({
               onImageError={() => handleImageError(event.id)}
               onViewMore={() => onViewMore(event)}
               onRegister={() => onRegister(event)}
+              isRegistered={registeredEventIds.has(event.id)}
             />
           ))}
         </div>
@@ -83,6 +86,7 @@ interface GalleryEventCardProps {
   onImageError: () => void;
   onViewMore: () => void;
   onRegister: () => void;
+  isRegistered: boolean;
 }
 
 function GalleryEventCard({
@@ -91,6 +95,7 @@ function GalleryEventCard({
   onImageError,
   onViewMore,
   onRegister,
+  isRegistered,
 }: GalleryEventCardProps) {
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState<"upcoming" | "past">("upcoming");
@@ -222,8 +227,14 @@ function GalleryEventCard({
           Details
         </Button>
         {status === "upcoming" ? (
-          <Button variant="primary" size="sm" className="flex-1 text-xs" onClick={onRegister}>
-            Register
+          <Button 
+            variant="primary" 
+            size="sm" 
+            className={`flex-1 text-xs ${isRegistered ? "bg-slate-700 hover:bg-slate-700 text-slate-300 opacity-80 cursor-default" : ""}`} 
+            onClick={isRegistered ? undefined : onRegister}
+            disabled={isRegistered}
+          >
+            {isRegistered ? "Registered" : "Register"}
           </Button>
         ) : (
           <Button variant="ghost" size="sm" className="flex-1 text-xs disabled:opacity-50" disabled>

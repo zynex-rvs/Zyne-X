@@ -8,11 +8,12 @@ import Timeline from "@/components/sections/Timeline";
 
 interface EventDetailProps {
   event: Event;
+  isRegistered: boolean;
   onBackClick: () => void;
   onRegisterClick: () => void;
 }
 
-export default function EventDetail({ event, onBackClick, onRegisterClick }: EventDetailProps) {
+export default function EventDetail({ event, isRegistered, onBackClick, onRegisterClick }: EventDetailProps) {
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState<"upcoming" | "past">("upcoming");
 
@@ -82,8 +83,14 @@ export default function EventDetail({ event, onBackClick, onRegisterClick }: Eve
           <ArrowLeft className="w-4 h-4" /> Back to Events
         </Button>
         {status === "upcoming" && (
-          <Button variant="primary" size="md" onClick={onRegisterClick}>
-            Register for Event
+          <Button 
+            variant="primary" 
+            size="md" 
+            onClick={isRegistered ? undefined : onRegisterClick}
+            disabled={isRegistered}
+            className={isRegistered ? "bg-slate-700 hover:bg-slate-700 text-slate-300 opacity-80 cursor-default" : ""}
+          >
+            {isRegistered ? "Already Registered" : "Register for Event"}
           </Button>
         )}
       </div>

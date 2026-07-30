@@ -11,11 +11,12 @@ import SectionCard from "../ui/SectionCard";
 
 interface EventsProps {
   events: Event[];
+  registeredEventIds: Set<string>;
   onRegisterClick: (event: Event) => void;
   onViewDetailsClick: (event: Event) => void;
 }
 
-export default function Events({ events, onRegisterClick, onViewDetailsClick }: EventsProps) {
+export default function Events({ events, registeredEventIds, onRegisterClick, onViewDetailsClick }: EventsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -88,6 +89,7 @@ export default function Events({ events, onRegisterClick, onViewDetailsClick }: 
               >
                 <EventCard
                   event={event}
+                  isRegistered={registeredEventIds.has(event.id)}
                   onRegister={() => onRegisterClick(event)}
                   onViewDetails={() => onViewDetailsClick(event)}
                 />
@@ -102,11 +104,12 @@ export default function Events({ events, onRegisterClick, onViewDetailsClick }: 
 // Inner Event Card Component with Countdown Timer support
 interface EventCardProps {
   event: Event;
+  isRegistered: boolean;
   onRegister: () => void;
   onViewDetails: () => void;
 }
 
-function EventCard({ event, onRegister, onViewDetails }: EventCardProps) {
+function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCardProps) {
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState<"upcoming" | "past">("upcoming");
 
@@ -246,8 +249,16 @@ function EventCard({ event, onRegister, onViewDetails }: EventCardProps) {
                 View Details
               </Button>
               {status === "upcoming" && (
-                <Button size="sm" className="flex-1 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all border-none" onClick={(e) => { e.stopPropagation(); onRegister(); }}>
-                  Register Now
+                <Button 
+                  size="sm" 
+                  className={`flex-1 rounded-xl text-xs font-bold transition-all border-none ${isRegistered ? "bg-slate-700 hover:bg-slate-700 text-slate-300 opacity-80 cursor-default" : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"}`}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (!isRegistered) onRegister(); 
+                  }}
+                  disabled={isRegistered}
+                >
+                  {isRegistered ? "Registered" : "Register Now"}
                 </Button>
               )}
             </div>

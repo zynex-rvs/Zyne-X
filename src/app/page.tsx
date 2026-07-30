@@ -19,6 +19,7 @@ import AdminLoginModal from "@/components/modals/AdminLoginModal";
 import ModeratorLoginModal from "@/components/modals/ModeratorLoginModal";
 import EditProfileModal from "@/components/modals/EditProfileModal";
 import EventRegisterModal from "@/components/modals/EventRegisterModal";
+import RegistrationSuccessModal from "@/components/modals/RegistrationSuccessModal";
 import NotificationPanel from "@/components/modals/NotificationPanel";
 import ImageCropperModal from "@/components/modals/ImageCropperModal";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
@@ -196,6 +197,29 @@ export default function Home() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<Event | null>(null);
+  
+  // Registration Success Modal States
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState("");
+  const [successModalSubMessage, setSuccessModalSubMessage] = useState("");
+
+  const registeredEventIds = React.useMemo(() => {
+    if (!currentUser) return new Set<string>();
+    const ids = new Set<string>();
+    // Check solo registrations
+    Object.entries(eventRegistrations).forEach(([eventId, regs]) => {
+      if (regs.some((r) => r.userId === currentUser.id)) {
+        ids.add(eventId);
+      }
+    });
+    // Check team registrations
+    Object.values(teams).forEach((team) => {
+      if (team.members.includes(currentUser.id)) {
+        ids.add(team.eventId);
+      }
+    });
+    return ids;
+  }, [currentUser, eventRegistrations, teams]);
 
   // Handle hash on load
   useEffect(() => {
@@ -543,7 +567,10 @@ export default function Home() {
         setNotifications([...notifications, insertedNotif as any]);
       }
 
-      addToast(`Registration successful! Team Code: ${code}`, "success");
+      setSuccessModalMessage(`Successfully registered for ${currentEvent.name}!`);
+      setSuccessModalSubMessage(`Your Team Code is: ${code}. You can invite members from your dashboard.`);
+      setShowSuccessModal(true);
+      // Remove addToast for this success
     } else {
       const { error: regErr } = await supabase.from("registrations").insert(registration);
       if (regErr) {
@@ -554,7 +581,10 @@ export default function Home() {
         ...eventRegistrations,
         [currentEvent.id]: [...(eventRegistrations[currentEvent.id] || []), registration as any],
       });
-      addToast(`Successfully registered for ${currentEvent.name}!`, "success");
+      setSuccessModalMessage(`Successfully registered for ${currentEvent.name}!`);
+      setSuccessModalSubMessage("");
+      setShowSuccessModal(true);
+      // Remove addToast for this success
     }
     setActiveModal(null);
   };
@@ -921,6 +951,7 @@ export default function Home() {
             
             <Events
               events={events}
+              registeredEventIds={registeredEventIds}
               onRegisterClick={(event) => {
                 if (!currentUser) {
                   setActiveModal("login");
@@ -954,6 +985,7 @@ export default function Home() {
         {viewMode === "gallery" && (
           <EventsGallery
             events={events}
+            registeredEventIds={registeredEventIds}
             onBack={() => { setViewMode("landing"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             onViewMore={(event) => {
               setSelectedEvent(event);
@@ -986,6 +1018,7 @@ export default function Home() {
         {viewMode === "event-detail" && selectedEvent && (
           <EventDetail
             event={selectedEvent}
+            isRegistered={registeredEventIds.has(selectedEvent.id)}
             onBackClick={() => { setViewMode("landing"); setSelectedEvent(null); }}
             onRegisterClick={() => {
               if (!currentUser) {
@@ -1104,6 +1137,13 @@ export default function Home() {
           onRegisterSubmit={handleEventRegisterSubmit}
         />
       )}
+
+      <RegistrationSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={successModalMessage}
+        subMessage={successModalSubMessage}
+      />
 
       <NotificationPanel
         isOpen={isNotificationsOpen}
