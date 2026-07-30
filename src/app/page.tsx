@@ -25,7 +25,7 @@ import { uploadImageToCloudinary } from "@/lib/uploadImage";
 import { registerUser, loginUser } from "@/app/actions/auth";
 import Footer from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
-import { User, Event, Team as TeamType, Registration, Notification, Enquiry as EnquiryType, Club, Administrator } from "@/types";
+import { User, Event, Team as TeamType, Registration, Notification, Enquiry as EnquiryType, Club, Administrator, Submission } from "@/types";
 import { useToast } from "@/hooks/useToast";
 
 import { supabase } from "@/lib/supabaseClient";
@@ -69,6 +69,7 @@ export default function Home() {
   const [teams, setTeams] = useState<Record<string, TeamType>>({});
   const [enquiries, setEnquiries] = useState<EnquiryType[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [announcements, setAnnouncements] = useState<import("@/types").Announcement[]>(mockAnnouncements);
   
   // Try to load currentUser from localStorage as a simple session mechanism
@@ -142,13 +143,15 @@ export default function Home() {
         { data: teamsData },
         { data: regsData },
         { data: enqData },
-        { data: notifsData }
+        { data: notifsData },
+        { data: submissionsData }
       ] = await Promise.all([
         supabase.from("users").select("*"),
         supabase.from("teams").select("*"),
         supabase.from("registrations").select("*"),
         supabase.from("enquiries").select("*"),
-        supabase.from("notifications").select("*")
+        supabase.from("notifications").select("*"),
+        supabase.from("submissions").select("*")
       ]);
 
       if (usersData) {
@@ -162,6 +165,7 @@ export default function Home() {
       }
       if (enqData) setEnquiries(enqData);
       if (notifsData) setNotifications(notifsData);
+      if (submissionsData) setSubmissions(submissionsData);
 
       if (teamsData) {
         const teamsMap: Record<string, import("@/types").Team> = {};
@@ -388,7 +392,6 @@ export default function Home() {
       addToast("Access Denied: Moderator accounts cannot access the main Admin portal.", "error");
       return;
     }
-
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: pass,
@@ -709,6 +712,28 @@ export default function Home() {
     }
   };
 
+  // Project Submissions
+  const handleSubmitProject = async (eventId: string, projectUrl: string, description: string, teamCode?: string) => {
+    if (!currentUser) return;
+    
+    const submissionData = {
+      eventId,
+      userId: currentUser.id,
+      teamCode,
+      projectUrl,
+      description
+    };
+    
+    const { data: inserted, error } = await supabase.from("submissions").insert(submissionData).select().single();
+    if (inserted) {
+      setSubmissions([...submissions, inserted as any]);
+      addToast("Project submitted successfully!", "success");
+    } else {
+      console.error(error);
+      addToast("Failed to submit project.", "error");
+    }
+  };
+
   // Notifications invite actions
   const handleInviteMemberByRegNo = async (regNo: string, teamCode: string) => {
     if (!currentUser) return;
@@ -800,17 +825,41 @@ export default function Home() {
   const handleRespondEnquiry = async (idx: number, reply: string) => {
     const list = [...enquiries];
     const enq = list[idx];
-    const { error } = await supabase.from("enquiries").update({ status: "resolved" }).eq("id", enq.id);
-    if (!error) {
-      enq.status = "resolved";
-      setEnquiries(list);
-      addToast("Response sent to candidate.", "success");
-    } else {
-      addToast("Failed to respond to enquiry.", "error");
+    
+    try {
+      const emailRes = await fetch('/api/send-enquiry-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: enq.email,
+          name: enq.name,
+          subject: enq.subject,
+          replyMessage: reply,
+        }),
+      });
+
+      const emailData = await emailRes.json();
+      
+      if (!emailRes.ok) {
+        addToast(emailData.error || "Failed to send email reply.", "error");
+        return;
+      }
+      
+      const { error } = await supabase.from("enquiries").update({ status: "resolved" }).eq("id", enq.id);
+      if (!error) {
+        enq.status = "resolved";
+        setEnquiries(list);
+        addToast("Response sent to candidate via email.", "success");
+      } else {
+        addToast("Email sent, but failed to update enquiry status.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("An error occurred while sending the reply.", "error");
     }
   };
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const unreadCount = notifications.filter((n) => n.unread && n.userId === currentUser?.id).length;
 
   // Hydration guard
   if (!isLoaded) {
@@ -976,6 +1025,7 @@ export default function Home() {
             onTransferLeadership={handleTransferLeadership}
             onRemoveMember={handleRemoveMember}
             setUsers={setUsers}
+            onSubmitProject={handleSubmitProject}
           />
         )}
 
@@ -994,6 +1044,7 @@ export default function Home() {
             setUsers={setUsers}
             teams={teams}
             setTeams={setTeams}
+            submissions={submissions}
             eventRegistrations={eventRegistrations}
             enquiries={enquiries}
             onRespondEnquiry={handleRespondEnquiry}

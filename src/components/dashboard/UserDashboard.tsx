@@ -6,6 +6,7 @@ import { User as UserIcon, BookOpen, Bell, Settings, Award, Edit, Trash2, Camera
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "../ui/Button";
 import ImageCropperModal from "../modals/ImageCropperModal";
+import SubmissionModal from "../modals/SubmissionModal";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
 
 interface UserDashboardProps {
@@ -22,6 +23,7 @@ interface UserDashboardProps {
   onTransferLeadership?: (teamCode: string, newLeaderId: string) => void;
   onRemoveMember?: (teamCode: string, memberId: string) => void;
   setUsers: (users: User[]) => void;
+  onSubmitProject?: (eventId: string, projectUrl: string, description: string, teamCode?: string) => void;
 }
 
 export default function UserDashboard({
@@ -38,9 +40,12 @@ export default function UserDashboard({
   onTransferLeadership,
   onRemoveMember,
   setUsers,
+  onSubmitProject = () => {},
 }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "events">("profile");
   const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [submissionEvent, setSubmissionEvent] = useState<Event | null>(null);
+  const [submissionTeamCode, setSubmissionTeamCode] = useState<string | undefined>(undefined);
   const [memberCropperState, setMemberCropperState] = useState<{ isOpen: boolean, imageSrc: string | null, userId: string | null }>({ isOpen: false, imageSrc: null, userId: null });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -102,22 +107,6 @@ export default function UserDashboard({
   const registeredList: { event: Event; isTeam: boolean; team?: Team }[] = [];
   
   events.forEach((event) => {
-    // Check if event is expired (event date has passed)
-    const now = new Date().getTime();
-    let eventTargetStr = event.date;
-    if (event.time) {
-      if (event.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        eventTargetStr = `${event.date}T${event.time}`;
-      } else {
-        eventTargetStr = `${event.date} 2026 ${event.time}`;
-      }
-    }
-    let eventTarget = new Date(eventTargetStr).getTime();
-    if (isNaN(eventTarget)) eventTarget = new Date(event.date).getTime();
-    
-    if (!isNaN(eventTarget) && eventTarget - now <= 0) {
-      return; // Skip expired events
-    }
 
     if (event.isTeamEvent) {
       const userTeam = Object.values(teams || {}).find(
@@ -292,14 +281,37 @@ export default function UserDashboard({
                             {isTeam ? "Team Competition" : "Solo Competition"}
                           </span>
                         </div>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="flex items-center gap-1 text-xs"
-                          onClick={() => onCancelRegistration(event.id, isTeam)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Disband
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const isToday = new Date(event.date).toDateString() === new Date().toDateString();
+                            const isAllowedToSubmit = !isTeam || (isTeam && team?.leaderId === currentUser.id);
+                            
+                            if (isToday && isAllowedToSubmit) {
+                              return (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-xs bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_15px_rgba(8,145,178,0.4)] border-none"
+                                  onClick={() => {
+                                    setSubmissionEvent(event);
+                                    setSubmissionTeamCode(team?.teamCode);
+                                  }}
+                                >
+                                  Submit Project
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })()}
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            className="flex items-center gap-1 text-xs"
+                            onClick={() => onCancelRegistration(event.id, isTeam)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Disband
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Display team subdetails */}
@@ -466,6 +478,17 @@ export default function UserDashboard({
           onCropComplete={handleCropComplete}
           onClose={() => setCropperImage(null)}
           aspect={1}
+        />
+      )}
+      {submissionEvent && (
+        <SubmissionModal
+          isOpen={true}
+          onClose={() => setSubmissionEvent(null)}
+          event={submissionEvent}
+          onSubmitProject={(url, desc) => {
+            onSubmitProject(submissionEvent.id, url, desc, submissionTeamCode);
+            setSubmissionEvent(null);
+          }}
         />
       )}
       {memberCropperState.isOpen && (

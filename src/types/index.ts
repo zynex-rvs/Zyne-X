@@ -32,6 +32,7 @@ export interface Event {
   registrationOpenDate?: string;
   registrationEndDate?: string;
   timeline?: string[];
+  organizedBy?: string;
 }
 
 export interface Team {
@@ -102,4 +103,14 @@ export interface Announcement {
   date: string;
   image: string;
   link?: string;
+}
+
+export interface Submission {
+  id?: string;
+  eventId: string;
+  userId: string;
+  teamCode?: string;
+  projectUrl: string;
+  description?: string;
+  submittedAt?: string;
 }

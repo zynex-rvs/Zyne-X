@@ -266,7 +266,7 @@ export default function AuthModal({
             <div className="text-center">
               <h2 className="text-2xl font-bold font-outfit text-white mb-1">Welcome Back</h2>
               <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold text-white/70">
-                Access ZYNE-X Portal
+                Access ZYNE-X | NEXAURA Portal
               </p>
             </div>
 
@@ -316,9 +316,9 @@ export default function AuthModal({
         {activeModal === "signup" && (
           <div className="flex flex-col gap-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold font-outfit text-white mb-1">Join ZYNE-X</h2>
+              <h2 className="text-2xl font-bold font-outfit text-white mb-1">Join ZYNE-X | NEXAURA</h2>
               <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold text-white">
-                Department of AI & ML
+                Department of AI & ML | AI & DS
               </p>
             </div>
 

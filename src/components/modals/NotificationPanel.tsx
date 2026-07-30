@@ -48,7 +48,7 @@ export default function NotificationPanel({
           <div className="flex items-center gap-2">
             <span className="text-base font-bold text-white font-outfit">Notifications</span>
             {notifications.filter((n) => n.unread).length > 0 && (
-              <span className="px-2 py-0.5 bg-white/10 text-[10px] font-bold rounded-full text-white">
+              <span className="px-2 py-0.5 bg-red-500 text-[10px] font-bold rounded-full text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]">
                 {notifications.filter((n) => n.unread).length} NEW
               </span>
             )}
@@ -72,36 +72,47 @@ export default function NotificationPanel({
             notifications.map((notif) => (
               <div
                 key={notif.id}
-                className={`p-4 rounded-xl border border-white/5 bg-black flex flex-col gap-3 relative transition-all duration-300 ${
-                  notif.unread ? "border-l-2 border-l-cyber-cyan" : ""
+                className={`p-4 rounded-xl border border-white/5 bg-black flex gap-3 relative transition-all duration-300 ${
+                  notif.unread ? "border-l-2 border-l-cyan-500" : ""
                 }`}
               >
-                <p className="text-slate-300 text-sm leading-relaxed">{notif.message}</p>
-                
-                {notif.type === "invite" && notif.teamCode && (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="px-3 py-1 flex items-center gap-1 text-xs"
-                      onClick={() => onAcceptInvite(notif.id)}
-                    >
-                      <Check className="w-3.5 h-3.5" /> Accept
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="px-3 py-1 flex items-center gap-1 text-xs"
-                      onClick={() => onRejectInvite(notif.id)}
-                    >
-                      <X className="w-3.5 h-3.5" /> Reject
-                    </Button>
-                  </div>
-                )}
-                
-                <span className="text-[10px] text-slate-600 self-end mt-1">
-                  {new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <div className="pt-0.5 shrink-0">
+                  {notif.type === "invite" ? (
+                    <MailOpen className="w-5 h-5 text-amber-400" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 flex-1">
+                  <p className="text-slate-300 text-sm leading-relaxed">{notif.message}</p>
+                  
+                  {notif.type === "invite" && notif.teamCode && (
+                    <div className="flex gap-2 mt-1">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="px-3 py-1 flex items-center gap-1 text-xs"
+                        onClick={() => onAcceptInvite(notif.id)}
+                      >
+                        <Check className="w-3.5 h-3.5" /> Accept
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="px-3 py-1 flex items-center gap-1 text-xs"
+                        onClick={() => onRejectInvite(notif.id)}
+                      >
+                        <X className="w-3.5 h-3.5" /> Reject
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <span className="text-[10px] text-slate-600 self-end mt-1">
+                    {new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
             ))
           )}

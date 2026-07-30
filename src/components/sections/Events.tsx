@@ -228,6 +228,16 @@ function EventCard({ event, onRegister, onViewDetails }: EventCardProps) {
                   <span className="text-xs text-white truncate font-medium">{(event as any).isTeamEvent ? `Team (Max ${(event as any).teamSize})` : "Solo"}</span>
                 </div>
               </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-amber-500/30 group-hover:border-amber-500/60 transition-colors shadow-[0_0_10px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                  <Award className="w-4 h-4 text-amber-400/80 group-hover:text-amber-400 transition-colors" />
+                </div>
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Organizer</span>
+                  <span className="text-sm text-amber-400 truncate font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">{event.organizedBy || "ZYNE-X"}</span>
+                </div>
+              </div>
             </div>
 
             {/* Actions */}

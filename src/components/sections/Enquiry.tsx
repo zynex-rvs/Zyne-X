@@ -84,17 +84,23 @@ export default function Enquiry({ onSubmitEnquiry }: EnquiryProps) {
                 </div>
                 <div>
                   <h4 className="text-white font-bold text-sm tracking-wide uppercase">Email Us</h4>
-                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">zynex.rvs@gmail.com</p>
+                  <div className="text-cyan-100/70 text-sm mt-1 group-hover:text-cyan-300 transition-colors flex flex-col gap-1">
+                    <span>zynex.rvs@gmail.com</span>
+                    <span>nexaura.rvs@gmail.com</span>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-5 group cursor-pointer">
-                <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 group-hover:bg-blue-500/20 group-hover:border-blue-400/50 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-500">
+              <div className="flex items-start gap-5 group cursor-pointer mt-2">
+                <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 group-hover:bg-blue-500/20 group-hover:border-blue-400/50 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-500 shrink-0">
                   <MapPin className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-sm tracking-wide uppercase">Visit Us</h4>
-                  <p className="text-cyan-100/70 text-base mt-0.5 group-hover:text-cyan-300 transition-colors">3rd Floor, AI & ML Dept, RVS iTech, Coimbatore</p>
+                  <h4 className="text-white font-bold text-sm tracking-wide uppercase pt-1">Visit Us</h4>
+                  <div className="text-cyan-100/70 text-sm mt-1 group-hover:text-cyan-300 transition-colors flex flex-col gap-1">
+                    <span>1. ZYNEX - Room No. 400, RVS - iTech</span>
+                    <span>2. NEXAURA - Room No. 427, RVS - iTech</span>
+                  </div>
                 </div>
               </div>
             </div>

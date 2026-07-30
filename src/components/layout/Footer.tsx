@@ -21,26 +21,20 @@ export default function Footer({ navigateTo }: FooterProps) {
           
           {/* Info Column (Wider) */}
           <div className="md:col-span-12 lg:col-span-5 flex flex-col gap-6">
-            <div className="flex items-center cursor-pointer" onClick={() => navigateTo("home")}>
-              <img 
-                src="/zynex-logo.png" 
-                alt="ZYNE-X Logo" 
-                className="h-20 w-auto object-contain transition-all duration-300 hover:drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]"
-              />
-            </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-md">
-              ZYNE-X is the premier club of the Department of Artificial Intelligence & Machine Learning at RVS Technical Campus.
-            </p>
-            <div className="flex gap-4 mt-2">
-              <a href="https://instagram.com/zynex_rvs" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full clean-card border border-white/5 hover:border-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 group">
-                <i className="fab fa-instagram text-lg group-hover:scale-110 transition-transform"></i>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full clean-card border border-white/5 hover:border-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 group">
-                <i className="fab fa-linkedin text-lg group-hover:scale-110 transition-transform"></i>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full clean-card border border-white/5 hover:border-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 group">
-                <i className="fab fa-github text-lg group-hover:scale-110 transition-transform"></i>
-              </a>
+            {/* Logo and text removed as requested */}
+            <div className="flex gap-6 mt-2">
+              <div className="flex flex-col items-center gap-2">
+                <a href="https://instagram.com/zynex_rvs" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full clean-card border border-white/5 hover:border-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 group">
+                  <i className="fab fa-instagram text-lg group-hover:scale-110 transition-transform"></i>
+                </a>
+                <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">ZYNE-X</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <a href="#" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full clean-card border border-white/5 hover:border-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 group">
+                  <i className="fab fa-instagram text-lg group-hover:scale-110 transition-transform"></i>
+                </a>
+                <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">NEXAURA</span>
+              </div>
             </div>
           </div>
 
@@ -105,18 +99,22 @@ export default function Footer({ navigateTo }: FooterProps) {
             </h3>
             <ul className="flex flex-col gap-5 text-sm text-slate-400">
               <li className="flex items-start gap-3 group cursor-default">
-                <div className="w-8 h-8 rounded-full clean-card flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors duration-300">
+                <div className="w-8 h-8 rounded-full clean-card flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors duration-300 mt-1">
                   <MapPin className="w-4 h-4 text-white/70 group-hover:text-white" />
                 </div>
-                <span className="leading-relaxed pt-1 group-hover:text-white transition-colors">
-                  Dept of AI & ML,<br />RVS Technical Campus,<br />Coimbatore - 641402
+                <span className="leading-relaxed pt-1 group-hover:text-white transition-colors flex flex-col gap-1">
+                  <span>1. ZYNEX - Room No. 400, RVS - iTech</span>
+                  <span>2. NEXAURA - Room No. 427, RVS - iTech</span>
                 </span>
               </li>
-              <li className="flex items-center gap-3 group">
-                <div className="w-8 h-8 rounded-full clean-card flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors duration-300">
+              <li className="flex items-start gap-3 group">
+                <div className="w-8 h-8 rounded-full clean-card flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors duration-300 mt-1">
                   <Mail className="w-4 h-4 text-white/70 group-hover:text-white" />
                 </div>
-                <a href="mailto:zynex.rvs@gmail.com" className="hover:text-white transition-colors duration-200 pt-0.5">zynex.rvs@gmail.com</a>
+                <div className="flex flex-col gap-1 pt-1">
+                  <a href="mailto:zynex.rvs@gmail.com" className="hover:text-white transition-colors duration-200 text-slate-400">zynex.rvs@gmail.com</a>
+                  <a href="mailto:nexaura.rvs@gmail.com" className="hover:text-white transition-colors duration-200 text-slate-400">nexaura.rvs@gmail.com</a>
+                </div>
               </li>
             </ul>
           </div>
@@ -128,7 +126,7 @@ export default function Footer({ navigateTo }: FooterProps) {
             © {new Date().getFullYear()} <span className="text-white font-bold font-outfit tracking-wider">ZYNE-X</span> Club. All rights reserved.
           </p>
           <p className="flex items-center gap-2">
-            Built for the <span className="text-white">AI & ML Innovation Hub</span>
+            Build for the <span className="text-white">Association of AI & ML | AI & DS</span>
           </p>
         </div>
       </div>

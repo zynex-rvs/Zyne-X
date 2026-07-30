@@ -55,7 +55,7 @@ export default function AdminContentManager({
       }
     } else {
       if (activeTab === "events") {
-        setFormData({ name: "", registrationOpenDate: "", registrationEndDate: "", date: "", time: "TBD", venue: "", category: "General", description: "", rules: "", teamSize: 6, timeline: "", image: "" });
+        setFormData({ name: "", organizedBy: "", registrationOpenDate: "", registrationEndDate: "", date: "", time: "TBD", venue: "", category: "General", description: "", rules: "", teamSize: 6, timeline: "", image: "" });
       } else if (activeTab === "clubs") {
         setFormData({ name: "", subtitle: "", description: "", icon: "Zap", image: "" });
       } else if (activeTab === "admins" || activeTab === "nexaura-admins") {
@@ -386,6 +386,11 @@ export default function AdminContentManager({
             <div className="flex flex-col gap-1">
               <label className="text-xs text-slate-400">Venue</label>
               <input placeholder="Venue" className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all" value={formData.venue || ''} onChange={e => handleInputChange('venue', e.target.value)} />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-slate-400">Organized By</label>
+              <input placeholder="e.g. ZYNE-X or NEXAURA" className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all" value={formData.organizedBy || ''} onChange={e => handleInputChange('organizedBy', e.target.value)} />
             </div>
             
             <textarea placeholder="About the Event" className="col-span-2 p-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none transition-all min-h-[100px] resize-y" value={formData.description || ''} onChange={e => handleInputChange('description', e.target.value)} />

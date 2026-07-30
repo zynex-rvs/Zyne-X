@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Event, Team, Registration, Enquiry, Club, Administrator } from "@/types";
+import { User, Event, Team, Registration, Enquiry, Club, Administrator, Submission } from "@/types";
 import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckCircle, ArrowRight, Eye, X, Trash2, Edit, Camera } from "lucide-react";
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
@@ -28,6 +28,7 @@ interface AdminDashboardProps {
   onRespondEnquiry: (idx: number, reply: string) => void;
   announcements?: import("@/types").Announcement[];
   setAnnouncements?: (val: import("@/types").Announcement[]) => void;
+  submissions?: Submission[];
 }
 
 export default function AdminDashboard({
@@ -42,8 +43,9 @@ export default function AdminDashboard({
   onRespondEnquiry,
   announcements,
   setAnnouncements,
+  submissions = [],
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements" | "submissions">("stats");
   
   // Search parameters
   const [searchTerms, setSearchTerms] = useState({
@@ -61,6 +63,8 @@ export default function AdminDashboard({
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [editingUserData, setEditingUserData] = useState<User | null>(null);
   const [cropperState, setCropperState] = useState<{ image: string, userId: string } | null>(null);
+  const [viewingEnquiry, setViewingEnquiry] = useState<{enquiry: Enquiry, idx: number} | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   const handleCropComplete = async (base64: string) => {
     if (!cropperState) return;
@@ -187,7 +191,7 @@ export default function AdminDashboard({
       <div className="admin-tabs flex overflow-x-auto no-scrollbar gap-2 p-1 bg-white/5 backdrop-blur-md border border-white/5 rounded-xl mb-8 whitespace-nowrap">
         <button
           onClick={() => setActiveTab("stats")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "stats" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -195,7 +199,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("users")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "users" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -203,7 +207,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("registrations")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "registrations" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -211,7 +215,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("enquiries")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "enquiries" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -219,7 +223,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("events")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "events" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -227,7 +231,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("clubs")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "clubs" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -235,7 +239,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("admins")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "admins" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -243,7 +247,7 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("nexaura-admins")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "nexaura-admins" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
@@ -251,11 +255,19 @@ export default function AdminDashboard({
         </button>
         <button
           onClick={() => setActiveTab("announcements")}
-          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
             activeTab === "announcements" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
           }`}
         >
           Announcements
+        </button>
+        <button
+          onClick={() => setActiveTab("submissions")}
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "submissions" ? "bg-cyan-500/20 text-cyan-400 shadow-lg border border-cyan-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Submissions
         </button>
       </div>
 
@@ -468,16 +480,29 @@ export default function AdminDashboard({
                       </span>
                     </td>
                     <td className="p-3">
-                      {e.status === "pending" && (
+                      <div className="flex gap-2">
                         <Button
-                          variant="cyan"
+                          variant="secondary"
                           size="sm"
                           className="px-3 py-1 text-xs flex items-center gap-1"
-                          onClick={() => handleRespond(idx)}
+                          onClick={() => {
+                            setViewingEnquiry({ enquiry: e, idx });
+                            setReplyText("");
+                          }}
                         >
-                          Respond <ArrowRight className="w-3 h-3" />
+                          <Eye className="w-3 h-3" /> View
                         </Button>
-                      )}
+                        {e.status === "pending" && (
+                          <Button
+                            variant="cyan"
+                            size="sm"
+                            className="px-3 py-1 text-xs flex items-center gap-1"
+                            onClick={() => handleRespond(idx)}
+                          >
+                            Respond <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -677,6 +702,140 @@ export default function AdminDashboard({
           onClose={() => setCropperState(null)}
           aspect={1}
         />
+      )}
+      {/* Enquiry Details Modal */}
+      {viewingEnquiry && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full relative">
+            <button
+              onClick={() => setViewingEnquiry(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold font-outfit text-white mb-6 border-b border-white/10 pb-4">Enquiry Details</h3>
+            
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">From</p>
+                <p className="text-white font-medium">{viewingEnquiry.enquiry.name} <span className="text-slate-400 text-sm">({viewingEnquiry.enquiry.email})</span></p>
+              </div>
+              
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Subject</p>
+                <p className="text-white">{viewingEnquiry.enquiry.subject}</p>
+              </div>
+              
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Message</p>
+                <div className="bg-white/5 p-4 rounded-lg border border-white/10 text-slate-300 whitespace-pre-wrap text-sm max-h-48 overflow-y-auto">
+                  {viewingEnquiry.enquiry.message}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase inline-block ${
+                  viewingEnquiry.enquiry.status === "resolved" 
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                }`}>
+                  {viewingEnquiry.enquiry.status}
+                </span>
+              </div>
+              
+              {viewingEnquiry.enquiry.status === "pending" && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Compose Reply</p>
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type your response here. It will be sent via email..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white min-h-[100px] mb-3 focus:outline-none focus:border-cyan-500/50"
+                  />
+                  <div className="flex justify-end gap-3">
+                    <Button variant="ghost" onClick={() => setViewingEnquiry(null)}>Cancel</Button>
+                    <Button 
+                      variant="cyan"
+                      onClick={() => {
+                        if (!replyText.trim()) return alert("Reply cannot be empty.");
+                        onRespondEnquiry(viewingEnquiry.idx, replyText);
+                        setViewingEnquiry(null);
+                        alert("Response logged and candidate notified via email ledger!");
+                      }}
+                    >
+                      Send Reply <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Tab: Submissions */}
+      {activeTab === "submissions" && (
+        <div className="flex flex-col gap-6">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-bold font-outfit text-white">Event Submissions</h3>
+          </div>
+          
+          <div className="overflow-x-auto glass-panel border border-white/5 rounded-2xl relative">
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/5">
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Event Name</th>
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Team Code</th>
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project URL</th>
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Submitted At</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {submissions.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                      No submissions found.
+                    </td>
+                  </tr>
+                ) : (
+                  submissions.map((sub, i) => {
+                    const event = events.find(e => e.id === sub.eventId);
+                    const user = users.find(u => u.id === sub.userId);
+                    return (
+                      <tr key={sub.id || i} className="hover:bg-white/5 transition-colors group">
+                        <td className="p-4 text-sm text-white font-medium">
+                          {event ? event.name : "Unknown Event"}
+                        </td>
+                        <td className="p-4 text-sm text-slate-300">
+                          {user ? `${user.name} (${user.regNo})` : "Unknown User"}
+                        </td>
+                        <td className="p-4 text-sm font-mono text-cyan-400">
+                          {sub.teamCode || "-"}
+                        </td>
+                        <td className="p-4 text-sm">
+                          <a href={sub.projectUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline break-all">
+                            {sub.projectUrl}
+                          </a>
+                          {sub.description && (
+                            <p className="text-xs text-slate-500 mt-1 max-w-[200px] truncate" title={sub.description}>
+                              {sub.description}
+                            </p>
+                          )}
+                        </td>
+                        <td className="p-4 text-xs text-slate-400">
+                          {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );
