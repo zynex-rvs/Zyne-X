@@ -37,14 +37,18 @@ export async function registerUser(data: any) {
       image: data.image || null, // Image should already be a Cloudinary URL
     };
 
-    const { error: insertError } = await supabase.from("users").insert(newUser);
+    const { data: insertedUser, error: insertError } = await supabase
+      .from("users")
+      .insert(newUser)
+      .select()
+      .single();
     
     if (insertError) {
       return { error: insertError.message };
     }
 
     // Return success (we omit password from the returned object for security)
-    const { password, ...safeUser } = newUser;
+    const { password, ...safeUser } = insertedUser;
     return { user: safeUser };
 
   } catch (err: any) {

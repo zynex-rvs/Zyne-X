@@ -30,14 +30,25 @@ export default function EventRegisterModal({
   onRegisterSubmit,
 }: EventRegisterModalProps) {
   // Common states
-  const [email, setEmail] = useState(currentUser.email);
-  const [mobile, setMobile] = useState(currentUser.mobile);
-  const [department, setDepartment] = useState(currentUser.department);
-  const [year, setYear] = useState(currentUser.year);
+  const [email, setEmail] = useState(currentUser?.email || "");
+  const [mobile, setMobile] = useState(currentUser?.mobile || "");
+  const [department, setDepartment] = useState(currentUser?.department || "");
+  const [year, setYear] = useState(currentUser?.year || "");
 
   // Team states
   const [teamName, setTeamName] = useState("");
-  const [leaderName, setLeaderName] = useState(currentUser.name);
+  const [leaderName, setLeaderName] = useState(currentUser?.name || "");
+
+  React.useEffect(() => {
+    if (isOpen && currentUser) {
+      setEmail(currentUser.email || "");
+      setMobile(currentUser.mobile || "");
+      setDepartment(currentUser.department || "");
+      setYear(currentUser.year || "");
+      setLeaderName(currentUser.name || "");
+      setTeamName("");
+    }
+  }, [isOpen, currentUser]);
 
   if (!isOpen) return null;
 
