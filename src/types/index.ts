@@ -114,3 +114,15 @@ export interface Submission {
   description?: string;
   submittedAt?: string;
 }
+
+export interface Winner {
+  id: string;
+  event_id: string;
+  position: 1 | 2 | 3;
+  winner_name: string;
+  members?: string[];
+  member_images?: string[];
+  image?: string;
+  project_url?: string;
+  created_at?: string;
+}

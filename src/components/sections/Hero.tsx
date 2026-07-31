@@ -134,7 +134,7 @@ export default function Hero({ onJoinClick, onExploreClick }: HeroProps) {
         <div className="flex flex-col items-center gap-1 mb-6 text-center">
           <h1 className="sr-only">ZYNEX & NEXAURA - Official RIVALS Association for AI & ML at RVS iTech, Coimbatore</h1>
           <p className={styles.tagline}>DEPARTMENT OF</p>
-          <p className={styles.tagline}>AI & DS | AI & ML</p>
+          <p className={`${styles.tagline} ${styles.highlightedDept}`}>AI & DS | AI & ML</p>
         </div>
         <div className={styles.actions}>
           <Button onClick={onJoinClick}>

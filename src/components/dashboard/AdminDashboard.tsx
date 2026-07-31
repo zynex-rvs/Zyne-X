@@ -6,6 +6,7 @@ import { Shield, Users, Trophy, Mail, FileSpreadsheet, Search, RefreshCw, CheckC
 import { Button } from "../ui/Button";
 import AdminContentManager from "./AdminContentManager";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
+import AdminResultsManager from "./AdminResultsManager";
 import ImageCropperModal from "../modals/ImageCropperModal";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
@@ -45,7 +46,7 @@ export default function AdminDashboard({
   setAnnouncements,
   submissions = [],
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements" | "submissions">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements" | "submissions" | "results">("stats");
   
   // Search parameters
   const [searchTerms, setSearchTerms] = useState({
@@ -268,6 +269,14 @@ export default function AdminDashboard({
           }`}
         >
           Submissions
+        </button>
+        <button
+          onClick={() => setActiveTab("results")}
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "results" ? "bg-cyan-500/20 text-cyan-400 shadow-lg border border-cyan-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Results Management
         </button>
       </div>
 
@@ -592,7 +601,7 @@ export default function AdminDashboard({
       {/* Edit User Modal */}
       {editingUserData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full relative max-h-[85dvh] overflow-y-auto">
             <button
               onClick={() => setEditingUserData(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
@@ -774,6 +783,16 @@ export default function AdminDashboard({
         </div>
       )}
 
+
+      {/* Tab: Results */}
+      {activeTab === "results" && (
+        <AdminResultsManager
+          events={events}
+          teams={teams}
+          eventRegistrations={eventRegistrations}
+          users={users}
+        />
+      )}
 
       {/* Tab: Submissions */}
       {activeTab === "submissions" && (

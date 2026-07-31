@@ -251,7 +251,7 @@ export default function AuthModal({
         initial={{ scale: 0.9, y: 15, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 15, opacity: 0 }}
-        className="w-full max-w-md max-h-[90vh] neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-y-auto z-10"
+        className="w-full max-w-md max-h-[85dvh] neumorphic-raised rounded-[2rem] p-6 md:p-8 relative overflow-y-auto z-10"
       >
         <button
           onClick={onClose}
@@ -322,7 +322,7 @@ export default function AuthModal({
               </p>
             </div>
 
-            <form onSubmit={handleSignupSubmit(onSignupSubmit)} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-3">
+            <form onSubmit={handleSignupSubmit(onSignupSubmit)} className="flex flex-col gap-4 max-h-[60dvh] overflow-y-auto pr-3">
               <Input
                 label="Full Name"
                 placeholder="JOHN DOE"

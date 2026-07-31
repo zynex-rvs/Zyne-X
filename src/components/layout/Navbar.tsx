@@ -111,6 +111,14 @@ export default function Navbar({
             </li>
             <li>
               <a
+                href="/results"
+                className="text-slate-400 hover:text-white transition-all duration-300"
+              >
+                Results
+              </a>
+            </li>
+            <li>
+              <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); handleLinkClick("enquiry"); }}
                 className="text-slate-400 hover:text-white transition-all duration-300"
@@ -232,7 +240,7 @@ export default function Navbar({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="lg:hidden absolute top-[calc(100%+0.5rem)] left-0 w-full max-h-[85vh] neumorphic-raised overflow-y-auto rounded-2xl"
+            className="lg:hidden absolute top-[calc(100%+0.5rem)] left-0 w-full max-h-[85dvh] neumorphic-raised overflow-y-auto rounded-2xl"
           >
             <div className="px-4 pt-3 pb-6 flex flex-col gap-4">
               <ul className="flex flex-col gap-3 font-medium text-sm">
@@ -271,6 +279,14 @@ export default function Navbar({
                     className="block text-slate-300 py-2 hover:text-white"
                   >
                     Events
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/results"
+                    className="block text-slate-300 py-2 hover:text-white"
+                  >
+                    Results
                   </a>
                 </li>
                 <li>

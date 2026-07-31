@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, Users } from "lucide-react";
+import { Mail, Phone, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "../ui/Card";
 import { Administrator } from "@/types";
 import SectionHeading from "../ui/SectionHeading";
@@ -86,6 +86,109 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
   );
 }
 
+function TeamCarousel({ admins, imageErrors, handleImageError }: { admins: Administrator[]; imageErrors: Record<string, boolean>; handleImageError: (name: string) => void }) {
+  const [rotationIndex, setRotationIndex] = useState(0);
+  const sortedAdmins = [...(admins || [])].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  const n = sortedAdmins.length;
+
+  useEffect(() => {
+    if (n <= 1) return;
+    const interval = setInterval(() => {
+      setRotationIndex((prev) => prev + 1);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [n]);
+
+  const handleNext = () => setRotationIndex((prev) => prev + 1);
+  const handlePrev = () => setRotationIndex((prev) => prev - 1);
+
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const distance = touchStart - touchEnd;
+    
+    if (distance > 50) {
+      handleNext(); // Swipe left
+    } else if (distance < -50) {
+      handlePrev(); // Swipe right
+    }
+    setTouchStart(null);
+  };
+
+  if (!n) return null;
+
+  const angle = 360 / n;
+  const cardWidth = 280;
+  
+  // Calculate cylinder radius
+  let radius = 0;
+  if (n > 2) {
+    radius = Math.max(cardWidth * 1.2, (cardWidth / 2) / Math.tan(Math.PI / n) + 60);
+  } else if (n === 2) {
+    radius = cardWidth;
+  }
+
+  return (
+    <div 
+      className="relative w-full h-[550px] flex items-center justify-center overflow-hidden" 
+      style={{ perspective: '1200px' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <motion.div
+        className="relative flex items-center justify-center w-full h-full"
+        animate={{ rotateY: rotationIndex * -angle, z: n > 1 ? -radius : 0 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20, mass: 1 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {sortedAdmins.map((admin, i) => {
+          // Determine if this card is currently front-facing
+          const normalizedRotation = ((rotationIndex % n) + n) % n;
+          const isActive = i === normalizedRotation;
+          
+          return (
+            <div
+              key={admin.name}
+              className="absolute flex items-center justify-center"
+              style={{
+                transform: n > 1 ? `rotateY(${i * angle}deg) translateZ(${radius}px)` : 'none',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden'
+              }}
+            >
+              <div 
+                className={`transition-all duration-700 ${!isActive ? 'opacity-30 scale-90 pointer-events-none' : 'opacity-100 scale-100 cursor-pointer'}`}
+              >
+                <AdminCard 
+                  admin={admin} 
+                  imageErrors={imageErrors} 
+                  handleImageError={handleImageError} 
+                />
+              </div>
+            </div>
+          );
+        })}
+      </motion.div>
+
+      {/* Navigation Controls */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-6 z-[60]">
+        <button onClick={handlePrev} className="w-12 h-12 rounded-full neumorphic-inset flex items-center justify-center text-cyan-400 hover:text-white hover:bg-white/5 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button onClick={handleNext} className="w-12 h-12 rounded-full neumorphic-inset flex items-center justify-center text-cyan-400 hover:text-white hover:bg-white/5 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Team({ admins, subtitle }: TeamProps) {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
@@ -99,18 +202,7 @@ export default function Team({ admins, subtitle }: TeamProps) {
           <SectionHeading title="THE TEAM" subtitle={subtitle} />
         </div>
         
-        <div className="admin-scroll-container overflow-x-auto pb-8 no-scrollbar -mx-4 px-4">
-          <div className="admin-grid flex gap-8 min-w-max">
-            {[...(admins || [])].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)).map((admin) => (
-              <AdminCard 
-                key={admin.name} 
-                admin={admin} 
-                imageErrors={imageErrors} 
-                handleImageError={handleImageError} 
-              />
-            ))}
-          </div>
-        </div>
+        <TeamCarousel admins={admins} imageErrors={imageErrors} handleImageError={handleImageError} />
     </SectionCard>
   );
 }

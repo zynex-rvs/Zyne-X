@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Calendar, MapPin, Award, Timer, Users } from "lucide-react";
 import { Event } from "@/types";
+import { supabase } from "@/lib/supabaseClient";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import SectionHeading from "../ui/SectionHeading";
@@ -19,6 +20,21 @@ interface EventsProps {
 export default function Events({ events, registeredEventIds, onRegisterClick, onViewDetailsClick }: EventsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [announcedEventIds, setAnnouncedEventIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const fetchWinners = async () => {
+      const { data, error } = await supabase.from("winners").select("event_id");
+      if (error && (error.code === '42P01' || error.code === 'PGRST205')) {
+        // Table not created yet, just ignore
+        return;
+      }
+      if (data) {
+        setAnnouncedEventIds(new Set(data.map((w: any) => w.event_id)));
+      }
+    };
+    fetchWinners();
+  }, []);
 
   const categories = ["All", "Hackathon", "Coding", "Design", "Paper Presentation"];
 
@@ -90,6 +106,7 @@ export default function Events({ events, registeredEventIds, onRegisterClick, on
                 <EventCard
                   event={event}
                   isRegistered={registeredEventIds.has(event.id)}
+                  isAnnounced={announcedEventIds.has(event.id)}
                   onRegister={() => onRegisterClick(event)}
                   onViewDetails={() => onViewDetailsClick(event)}
                 />
@@ -105,11 +122,12 @@ export default function Events({ events, registeredEventIds, onRegisterClick, on
 interface EventCardProps {
   event: Event;
   isRegistered: boolean;
+  isAnnounced?: boolean;
   onRegister: () => void;
   onViewDetails: () => void;
 }
 
-function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCardProps) {
+function EventCard({ event, isRegistered, isAnnounced, onRegister, onViewDetails }: EventCardProps) {
   const [timeLeft, setTimeLeft] = useState("");
   const [status, setStatus] = useState<"upcoming" | "past">("upcoming");
 
@@ -262,6 +280,15 @@ function EventCard({ event, isRegistered, onRegister, onViewDetails }: EventCard
                 disabled={isRegistered}
               >
                 {isRegistered ? "Registered" : "Register Now"}
+              </Button>
+            )}
+            {status === "past" && isAnnounced && (
+              <Button 
+                size="sm" 
+                className="flex-1 rounded-xl text-xs font-bold transition-all border-none bg-yellow-500 hover:bg-yellow-400 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+                onClick={() => { window.location.href = '/results'; }}
+              >
+                View Results
               </Button>
             )}
           </div>

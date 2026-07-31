@@ -48,17 +48,28 @@ export default function Footer({ navigateTo }: FooterProps) {
               {[
                 { name: "Home", id: "home" },
                 { name: "Leadership", id: "admins" },
-                { name: "Events", id: "events" }
+                { name: "Events", id: "events" },
+                { name: "Results", id: "results" }
               ].map((link) => (
                 <li key={link.id}>
-                  <a 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); navigateTo(link.id); }} 
-                    className="group flex items-center text-slate-400 hover:text-blue-200 transition-colors duration-200"
-                  >
-                    <ChevronRight className="w-3 h-3 mr-2 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 text-blue-400 transition-all duration-300" />
-                    <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
-                  </a>
+                  {link.id === "results" ? (
+                    <a 
+                      href="/results"
+                      className="group flex items-center text-slate-400 hover:text-blue-200 transition-colors duration-200"
+                    >
+                      <ChevronRight className="w-3 h-3 mr-2 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 text-blue-400 transition-all duration-300" />
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
+                    </a>
+                  ) : (
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); navigateTo(link.id); }} 
+                      className="group flex items-center text-slate-400 hover:text-blue-200 transition-colors duration-200"
+                    >
+                      <ChevronRight className="w-3 h-3 mr-2 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 text-blue-400 transition-all duration-300" />
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

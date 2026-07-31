@@ -1164,7 +1164,7 @@ export default function Home() {
             </p>
             <div className="flex justify-center">
               <label 
-                className="cursor-pointer"
+                className="cursor-pointer relative flex items-center justify-center"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1191,7 +1191,7 @@ export default function Home() {
                 <input
                   type="file"
                   accept="image/*"
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -1213,6 +1213,14 @@ export default function Home() {
 
       {/* Toast Notification Container */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      {cropperImage && (
+        <ImageCropperModal
+          imageSrc={cropperImage}
+          onCropComplete={handleUploadPhoto}
+          onClose={() => setCropperImage(null)}
+        />
+      )}
     </>
   );
 }

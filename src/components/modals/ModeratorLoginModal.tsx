@@ -47,7 +47,7 @@ export default function ModeratorLoginModal({
         initial={{ scale: 0.9, y: 15, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 15, opacity: 0 }}
-        className="w-full max-w-sm max-h-[90vh] bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-y-auto z-10"
+        className="w-full max-w-sm max-h-[85dvh] bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-y-auto z-10"
       >
         <button
           onClick={onClose}

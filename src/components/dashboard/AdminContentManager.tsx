@@ -534,7 +534,7 @@ export default function AdminContentManager({
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.1)]">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-2xl max-h-[85dvh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.1)]">
             <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0 bg-transparent">
               <h2 className="text-xl font-bold text-white capitalize">{modalMode} {activeTab.slice(0, -1)}</h2>
               <button onClick={closeModal} className="text-slate-400 hover:text-white transition-colors">
