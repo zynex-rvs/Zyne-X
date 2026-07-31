@@ -309,8 +309,8 @@ export default function AdminResultsManager({
             <Button
               onClick={handleRemoveWinners}
               disabled={isSaving}
-              variant="outline"
-              className="flex items-center gap-2 border-red-500/50 text-red-400 hover:bg-red-500/10 px-6 py-2 rounded-xl font-bold transition-all"
+              variant="ghost"
+              className="flex items-center gap-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 px-6 py-2 rounded-xl font-bold transition-all"
             >
               <Trash className="w-4 h-4" />
               Remove
