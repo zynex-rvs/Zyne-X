@@ -22,7 +22,7 @@ function AdminCard({ admin, imageErrors, handleImageError, isMobile }: { admin: 
     .toUpperCase();
 
   return (
-    <div className={`${isMobile ? 'w-[220px]' : 'w-[280px]'} neumorphic-raised rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4`}>
+    <div className={`${isMobile ? 'w-[220px]' : 'w-[280px]'} bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 hover:bg-white/5 hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] transition-all duration-500 flex flex-col gap-4 shadow-xl`}>
       {/* Image Area */}
       <div className={`w-full ${isMobile ? 'h-[160px]' : 'h-[200px]'} relative rounded-[1.5rem] overflow-hidden neumorphic-inset`}>
         {imageErrors[admin.name] || !admin.image ? (
@@ -169,6 +169,9 @@ function TeamCarousel({ admins, imageErrors, handleImageError }: { admins: Admin
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Dynamic Ambient Floor Light */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-[150px] md:mt-[220px] w-[300px] md:w-[600px] h-[50px] md:h-[150px] bg-cyan-500/20 blur-[50px] md:blur-[80px] rounded-[100%] pointer-events-none" style={{ transform: 'rotateX(75deg)' }} />
+
       <motion.div
         className="relative flex items-center justify-center w-full h-full"
         animate={{ 
