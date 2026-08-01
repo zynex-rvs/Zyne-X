@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import ImageCropperModal from "./ImageCropperModal";
+import { ToastContainer } from "../ui/Toast";
 import { useToast } from "@/hooks/useToast";
 
 const loginSchema = z.object({
@@ -57,7 +58,7 @@ export default function AuthModal({
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [cropperImage, setCropperImage] = useState<string | null>(null);
-  const { addToast } = useToast();
+  const { toasts, addToast, removeToast } = useToast();
 
   const {
     register: loginRegister,
@@ -588,6 +589,8 @@ export default function AuthModal({
         aspect={1}
       />
     )}
+    
+    <ToastContainer toasts={toasts} removeToast={removeToast} />
     </>
   );
 }

@@ -31,6 +31,7 @@ interface AdminDashboardProps {
   announcements?: import("@/types").Announcement[];
   setAnnouncements?: (val: import("@/types").Announcement[]) => void;
   submissions?: Submission[];
+  setSubmissions?: (val: Submission[]) => void;
   onAppointModerator?: (userId: string) => void;
   onRevokeModerator?: (userId: string) => void;
 }
@@ -48,6 +49,7 @@ export default function AdminDashboard({
   announcements,
   setAnnouncements,
   submissions = [],
+  setSubmissions,
   onAppointModerator,
   onRevokeModerator,
 }: AdminDashboardProps) {
@@ -182,6 +184,19 @@ export default function AdminDashboard({
     const nextTeams = { ...teams };
     delete nextTeams[teamCode];
     setTeams(nextTeams);
+  };
+
+  const handleDeleteSubmission = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this submission?")) return;
+    const { error } = await supabase.from("submissions").delete().eq("id", id);
+    if (error) {
+      addToast("Failed to delete submission: " + error.message, "error");
+      return;
+    }
+    if (setSubmissions) {
+      setSubmissions(submissions.filter(s => s.id !== id));
+    }
+    addToast("Submission deleted successfully", "success");
   };
 
   return (
@@ -876,6 +891,8 @@ export default function AdminDashboard({
           teams={teams}
           eventRegistrations={eventRegistrations}
           users={users}
+          announcements={announcements}
+          setAnnouncements={setAnnouncements}
         />
       )}
 
@@ -895,12 +912,13 @@ export default function AdminDashboard({
                   <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Team Code</th>
                   <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project URL</th>
                   <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Submitted At</th>
+                  <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {submissions.filter(s => !s.status || s.status === 'approved').length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                    <td colSpan={6} className="p-8 text-center text-slate-500">
                       No approved submissions found.
                     </td>
                   </tr>
@@ -931,6 +949,16 @@ export default function AdminDashboard({
                         </td>
                         <td className="p-4 text-xs text-slate-400">
                           {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : "-"}
+                        </td>
+                        <td className="p-4 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="px-2 py-1 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10" 
+                            onClick={() => handleDeleteSubmission(sub.id!)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </td>
                       </tr>
                     );

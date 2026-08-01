@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Event, Team, Registration, User, Winner } from "@/types";
+import { Event, Team, Registration, User, Winner, Announcement } from "@/types";
 import { Trophy, Save, RefreshCw, Trash } from "lucide-react";
 import { Button } from "../ui/Button";
 import { supabase } from "@/lib/supabaseClient";
@@ -12,6 +12,8 @@ interface AdminResultsManagerProps {
   teams: Record<string, Team>;
   eventRegistrations: Record<string, Registration[]>;
   users: User[];
+  announcements?: Announcement[];
+  setAnnouncements?: (val: Announcement[]) => void;
 }
 
 export default function AdminResultsManager({
@@ -19,6 +21,8 @@ export default function AdminResultsManager({
   teams,
   eventRegistrations,
   users,
+  announcements = [],
+  setAnnouncements,
 }: AdminResultsManagerProps) {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [winners, setWinners] = useState<Winner[]>([]);
@@ -155,7 +159,30 @@ export default function AdminResultsManager({
         if (error) throw error;
       }
 
-      addToast("Results posted successfully!", "success");
+      // Also create an announcement
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase();
+      
+      const announcementData = {
+        id: crypto.randomUUID(),
+        title: `Results announced for ${selectedEvent.name}!`,
+        description: `The results for ${selectedEvent.name} have been published. Check out the results section to see the winners!`,
+        date: formattedDate,
+        image: selectedEvent.image || "",
+        link: "/results"
+      };
+
+      const { data: insertedAnnouncement, error: annError } = await supabase
+        .from("announcements")
+        .insert(announcementData)
+        .select()
+        .single();
+      
+      if (!annError && insertedAnnouncement && setAnnouncements) {
+        setAnnouncements([...announcements, insertedAnnouncement as any]);
+      }
+
+      addToast("Results posted successfully and announcement created!", "success");
       fetchWinners();
     } catch (err) {
       console.error(err);
@@ -172,6 +199,13 @@ export default function AdminResultsManager({
       const { error } = await supabase.from("winners").delete().eq("event_id", selectedEvent.id);
       if (error) throw error;
       
+      // Remove corresponding announcement
+      const announcementTitle = `Results announced for ${selectedEvent.name}!`;
+      await supabase.from("announcements").delete().eq("title", announcementTitle);
+      if (setAnnouncements) {
+        setAnnouncements(announcements.filter(a => a.title !== announcementTitle));
+      }
+
       setFirstPlace("");
       setSecondPlace("");
       setThirdPlace("");

@@ -13,7 +13,7 @@ interface TeamProps {
   subtitle?: string;
 }
 
-function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administrator; imageErrors: Record<string, boolean>; handleImageError: (name: string) => void }) {
+function AdminCard({ admin, imageErrors, handleImageError, isMobile }: { admin: Administrator; imageErrors: Record<string, boolean>; handleImageError: (name: string) => void; isMobile?: boolean }) {
   const initials = admin.name
     .split(" ")
     .map((n) => n[0])
@@ -22,9 +22,9 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
     .toUpperCase();
 
   return (
-    <div className="w-[280px] neumorphic-raised rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4">
+    <div className={`${isMobile ? 'w-[220px]' : 'w-[280px]'} neumorphic-raised rounded-[2rem] p-5 relative group cursor-pointer hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4`}>
       {/* Image Area */}
-      <div className="w-full h-[200px] relative rounded-[1.5rem] overflow-hidden neumorphic-inset">
+      <div className={`w-full ${isMobile ? 'h-[160px]' : 'h-[200px]'} relative rounded-[1.5rem] overflow-hidden neumorphic-inset`}>
         {imageErrors[admin.name] || !admin.image ? (
           <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a] text-5xl font-heading font-bold text-white/20">
             {initials}
@@ -88,15 +88,23 @@ function AdminCard({ admin, imageErrors, handleImageError }: { admin: Administra
 
 function TeamCarousel({ admins, imageErrors, handleImageError }: { admins: Administrator[]; imageErrors: Record<string, boolean>; handleImageError: (name: string) => void }) {
   const [rotationIndex, setRotationIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const sortedAdmins = [...(admins || [])].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   const n = sortedAdmins.length;
 
   useEffect(() => {
-    if (n <= 1) return;
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    
+    if (n <= 1) return () => window.removeEventListener('resize', handleResize);
     const interval = setInterval(() => {
       setRotationIndex((prev) => prev + 1);
     }, 4000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [n]);
 
   const handleNext = () => setRotationIndex((prev) => prev + 1);
@@ -123,27 +131,51 @@ function TeamCarousel({ admins, imageErrors, handleImageError }: { admins: Admin
 
   if (!n) return null;
 
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const angle = 360 / n;
-  const cardWidth = 280;
+  const cardWidth = isMobile ? 220 : 280;
   
   // Calculate cylinder radius
   let radius = 0;
   if (n > 2) {
-    radius = Math.max(cardWidth * 1.2, (cardWidth / 2) / Math.tan(Math.PI / n) + 60);
+    const padding = isMobile ? 20 : 60;
+    const minOverlap = isMobile ? 0.9 : 1.2;
+    radius = Math.max(cardWidth * minOverlap, (cardWidth / 2) / Math.tan(Math.PI / n) + padding);
   } else if (n === 2) {
     radius = cardWidth;
   }
 
+  // Adjust container scale to ensure cylinder fits on small screens
+  // Without this, the neighbor cards are pushed outside the viewport bounds and clipped
+  let containerScale = 1;
+  if (isMobile) {
+    // Estimate width of the cylinder: 2 * radius + cardWidth
+    const estimatedWidth = (2 * radius) + cardWidth;
+    if (estimatedWidth > windowWidth) {
+      containerScale = (windowWidth * 0.9) / estimatedWidth;
+    }
+  } else if (isTablet) {
+    const estimatedWidth = (2 * radius) + cardWidth;
+    if (estimatedWidth > windowWidth) {
+      containerScale = (windowWidth * 0.95) / estimatedWidth;
+    }
+  }
+
   return (
     <div 
-      className="relative w-full h-[550px] flex items-center justify-center overflow-hidden" 
-      style={{ perspective: '1200px' }}
+      className={`relative w-full ${isMobile ? 'h-[400px]' : 'h-[550px]'} flex items-center justify-center overflow-hidden`} 
+      style={{ perspective: isMobile ? '800px' : '1200px' }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <motion.div
         className="relative flex items-center justify-center w-full h-full"
-        animate={{ rotateY: rotationIndex * -angle, z: n > 1 ? -radius : 0 }}
+        animate={{ 
+          rotateY: rotationIndex * -angle, 
+          z: n > 1 ? -radius : 0,
+          scale: containerScale 
+        }}
         transition={{ type: 'spring', stiffness: 120, damping: 20, mass: 1 }}
         style={{ transformStyle: 'preserve-3d' }}
       >
@@ -168,7 +200,8 @@ function TeamCarousel({ admins, imageErrors, handleImageError }: { admins: Admin
                 <AdminCard 
                   admin={admin} 
                   imageErrors={imageErrors} 
-                  handleImageError={handleImageError} 
+                  handleImageError={handleImageError}
+                  isMobile={isMobile}
                 />
               </div>
             </div>

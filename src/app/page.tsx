@@ -31,33 +31,6 @@ import { useToast } from "@/hooks/useToast";
 
 import { supabase } from "@/lib/supabaseClient";
 
-const mockAnnouncements: import("@/types").Announcement[] = [
-  {
-    id: "1",
-    title: "Registrations Open for AI Hackathon",
-    description: "Join the biggest AI Hackathon of the year. Build innovative solutions and win huge prizes. Early bird registrations close next week!",
-    date: "JULY 25, 2026",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=1000",
-    link: "#events",
-  },
-  {
-    id: "2",
-    title: "Guest Lecture: Future of Neural Networks",
-    description: "Dr. Alan Turing Jr. will be discussing the latest breakthroughs in LLMs and generative AI. Open to all students.",
-    date: "AUG 02, 2026",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=1000",
-    link: "#",
-  },
-  {
-    id: "3",
-    title: "ZYNE-X Club Inductions",
-    description: "We are recruiting! If you have a passion for AI, Web Dev, or Design, come join our community.",
-    date: "AUG 15, 2026",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1000",
-    link: "#",
-  }
-];
-
 export default function Home() {
   // Global States (Supabase synchronized)
   const [events, setEvents] = useState<Event[]>([]);
@@ -71,7 +44,7 @@ export default function Home() {
   const [enquiries, setEnquiries] = useState<EnquiryType[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [announcements, setAnnouncements] = useState<import("@/types").Announcement[]>(mockAnnouncements);
+  const [announcements, setAnnouncements] = useState<import("@/types").Announcement[]>([]);
   
   // Try to load currentUser from localStorage as a simple session mechanism
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -110,8 +83,40 @@ export default function Home() {
         if (adminsData) setAdministrators(adminsData);
         if (nexauraAdminsData) setNexauraAdministrators(nexauraAdminsData);
         if (clubsData) setClubs(clubsData);
-        if (announcementsData && !annError && announcementsData.length > 0) {
-          setAnnouncements(announcementsData);
+        if (announcementsData && !annError) {
+          // Filter announcements: remove result announcements older than 1 week
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          
+          const validAnnouncements = announcementsData.filter((ann: any) => {
+            if (ann.title.startsWith("Results announced for")) {
+              const annDate = new Date(ann.date);
+              // Check if date is valid before comparing
+              if (!isNaN(annDate.getTime())) {
+                return annDate >= oneWeekAgo;
+              }
+            }
+            return true;
+          });
+          
+          setAnnouncements(validAnnouncements);
+          
+          // Background cleanup: delete expired result announcements from the database
+          const expiredIds = announcementsData
+            .filter((ann: any) => {
+              if (ann.title.startsWith("Results announced for")) {
+                const annDate = new Date(ann.date);
+                if (!isNaN(annDate.getTime())) {
+                  return annDate < oneWeekAgo;
+                }
+              }
+              return false;
+            })
+            .map((ann: any) => ann.id);
+            
+          if (expiredIds.length > 0) {
+            supabase.from("announcements").delete().in("id", expiredIds).then();
+          }
         }
 
         // Restore user session
@@ -998,8 +1003,12 @@ export default function Home() {
         {/* Landing Page: all sections always visible */}
         {viewMode === "landing" && (
           <>
-            <Announcements announcements={announcements} />
-            <div className="animated-divider max-w-6xl" />
+            {announcements && announcements.length > 0 && (
+              <>
+                <Announcements announcements={announcements} />
+                <div className="animated-divider max-w-6xl" />
+              </>
+            )}
             
             <Clubs clubs={clubs} />
             
@@ -1139,6 +1148,7 @@ export default function Home() {
             teams={teams}
             setTeams={setTeams}
             submissions={submissions}
+            setSubmissions={setSubmissions}
             eventRegistrations={eventRegistrations}
             enquiries={enquiries}
             onRespondEnquiry={handleRespondEnquiry}
