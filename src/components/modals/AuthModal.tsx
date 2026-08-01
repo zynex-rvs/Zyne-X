@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import ImageCropperModal from "./ImageCropperModal";
+import { useToast } from "@/hooks/useToast";
 
 const loginSchema = z.object({
   regNo: z.string().min(1, "Registration number is required"),
@@ -56,6 +57,7 @@ export default function AuthModal({
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const {
     register: loginRegister,
@@ -99,11 +101,11 @@ export default function AuthModal({
         setActiveModal("otp");
         resetSignup();
       } else {
-        alert(`Failed to send OTP: ${result.error}`);
+        addToast(`Failed to send OTP: ${result.error}`, "error");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while sending the OTP.");
+      addToast("An error occurred while sending the OTP.", "error");
     } finally {
       setIsSendingOtp(false);
     }
@@ -136,11 +138,11 @@ export default function AuthModal({
           setActiveModal("signup");
         }
       } else {
-        alert(result.error || "Invalid verification code.");
+        addToast(result.error || "Invalid verification code.", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while verifying the OTP.");
+      addToast("An error occurred while verifying the OTP.", "error");
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -162,11 +164,11 @@ export default function AuthModal({
       if (res.ok) {
         setActiveModal("forgot-password-reset");
       } else {
-        alert(result.error || "Failed to send reset code.");
+        addToast(result.error || "Failed to send reset code.", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while sending the reset code.");
+      addToast("An error occurred while sending the reset code.", "error");
     } finally {
       setIsSendingForgotOtp(false);
     }
@@ -177,7 +179,7 @@ export default function AuthModal({
     if (!forgotOtp || !newPassword || !confirmNewPassword) return;
     
     if (newPassword !== confirmNewPassword) {
-      alert("Passwords do not match.");
+      addToast("Passwords do not match.", "error");
       return;
     }
     
@@ -191,18 +193,18 @@ export default function AuthModal({
       const result = await res.json();
       
       if (res.ok) {
-        alert("Password reset successfully! You can now sign in.");
+        addToast("Password reset successfully! You can now sign in.", "success");
         setForgotEmail("");
         setForgotOtp("");
         setNewPassword("");
         setConfirmNewPassword("");
         setActiveModal("login");
       } else {
-        alert(result.error || "Failed to reset password.");
+        addToast(result.error || "Failed to reset password.", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while resetting the password.");
+      addToast("An error occurred while resetting the password.", "error");
     } finally {
       setIsResettingPassword(false);
     }

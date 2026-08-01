@@ -10,6 +10,7 @@ import AdminResultsManager from "./AdminResultsManager";
 import ImageCropperModal from "../modals/ImageCropperModal";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
+import { useToast } from "@/hooks/useToast";
 
 interface AdminDashboardProps {
   events: Event[];
@@ -30,6 +31,8 @@ interface AdminDashboardProps {
   announcements?: import("@/types").Announcement[];
   setAnnouncements?: (val: import("@/types").Announcement[]) => void;
   submissions?: Submission[];
+  onAppointModerator?: (userId: string) => void;
+  onRevokeModerator?: (userId: string) => void;
 }
 
 export default function AdminDashboard({
@@ -45,8 +48,11 @@ export default function AdminDashboard({
   announcements,
   setAnnouncements,
   submissions = [],
+  onAppointModerator,
+  onRevokeModerator,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements" | "submissions" | "results">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "teams" | "registrations" | "enquiries" | "events" | "clubs" | "admins" | "nexaura-admins" | "announcements" | "submissions" | "results" | "moderators">("stats");
+  const { addToast } = useToast();
   
   // Search parameters
   const [searchTerms, setSearchTerms] = useState({
@@ -54,6 +60,7 @@ export default function AdminDashboard({
     teams: "",
     registrations: "",
     enquiries: "",
+    moderators: "",
   });
 
   const [userRoleFilter, setUserRoleFilter] = useState("All");
@@ -147,19 +154,19 @@ export default function AdminDashboard({
     const reply = prompt("Compose response to candidate email:");
     if (reply) {
       onRespondEnquiry(idx, reply);
-      alert("Response logged and candidate notified via email ledger!");
+      addToast("Response logged and candidate notified via email ledger!", "success");
     }
   };
 
   const exportTableData = (type: string) => {
-    alert(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`);
+    addToast(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`, "success");
   };
 
   const handleDeleteUser = async (id: string) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     const { error } = await supabase.from("users").delete().eq("id", id);
     if (error) {
-      alert("Failed to delete user: " + error.message);
+      addToast("Failed to delete user: " + error.message, "error");
       return;
     }
     setUsers(users.filter(u => u.id !== id));
@@ -169,7 +176,7 @@ export default function AdminDashboard({
     if (!confirm("Are you sure you want to delete this team?")) return;
     const { error } = await supabase.from("teams").delete().eq("teamCode", teamCode);
     if (error) {
-      alert("Failed to delete team: " + error.message);
+      addToast("Failed to delete team: " + error.message, "error");
       return;
     }
     const nextTeams = { ...teams };
@@ -253,6 +260,14 @@ export default function AdminDashboard({
           }`}
         >
           NEXAURA Admins
+        </button>
+        <button
+          onClick={() => setActiveTab("moderators")}
+          className={`flex-shrink-0 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "moderators" ? "bg-amber-500/20 text-amber-400 shadow-lg border border-amber-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Manage Moderators
         </button>
         <button
           onClick={() => setActiveTab("announcements")}
@@ -704,6 +719,73 @@ export default function AdminDashboard({
         </div>
       )}
 
+      {/* Tab: Moderators */}
+      {activeTab === "moderators" && (
+        <div className="glass-panel p-6 rounded-2xl border border-white/5 shadow-2xl flex flex-col gap-4">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <h3 className="text-lg font-bold font-outfit text-white">Appointed Moderators</h3>
+            
+            <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3 py-1.5 w-full md:w-auto">
+              <Search className="w-4 h-4 text-slate-400 mr-2" />
+              <input 
+                type="text"
+                placeholder="Search users..."
+                value={searchTerms.moderators}
+                onChange={(e) => handleSearchChange("moderators", e.target.value)}
+                className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full min-w-[200px]"
+              />
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto mt-2">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Reg No</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Name / Dept</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Role</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.filter(u => 
+                  u.name.toLowerCase().includes(searchTerms.moderators.toLowerCase()) || 
+                  u.regNo.toLowerCase().includes(searchTerms.moderators.toLowerCase())
+                ).map((u, i) => (
+                  <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? "bg-transparent" : "bg-white/[0.02]"}`}>
+                    <td className="py-3 px-4 text-sm text-slate-300 font-mono">{u.regNo}</td>
+                    <td className="py-3 px-4 text-sm text-white">
+                      <div>{u.name}</div>
+                      <div className="text-[10px] text-slate-500 uppercase">{u.department} • Year {u.year}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {u.role === "moderator" ? (
+                        <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-[10px] font-bold uppercase tracking-wider">Moderator</span>
+                      ) : u.role === "admin" ? (
+                        <span className="px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-white/10 text-slate-300 border border-white/20 rounded text-[10px] font-bold uppercase tracking-wider">Member</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {u.role === "moderator" ? (
+                        <Button variant="ghost" size="sm" onClick={() => onRevokeModerator && onRevokeModerator(u.id)} className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30">
+                          Revoke Access
+                        </Button>
+                      ) : u.role === "member" ? (
+                        <Button variant="primary" size="sm" onClick={() => onAppointModerator && onAppointModerator(u.id)} className="!py-1.5 !px-3 !text-[11px] whitespace-nowrap">
+                          Appoint Moderator
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {cropperState && (
         <ImageCropperModal
           imageSrc={cropperState.image}
@@ -767,10 +849,13 @@ export default function AdminDashboard({
                     <Button 
                       variant="cyan"
                       onClick={() => {
-                        if (!replyText.trim()) return alert("Reply cannot be empty.");
+                        if (!replyText.trim()) {
+                          addToast("Reply cannot be empty.", "warning");
+                          return;
+                        }
                         onRespondEnquiry(viewingEnquiry.idx, replyText);
                         setViewingEnquiry(null);
-                        alert("Response logged and candidate notified via email ledger!");
+                        addToast("Response logged and candidate notified via email ledger!", "success");
                       }}
                     >
                       Send Reply <ArrowRight className="w-4 h-4 ml-1" />
@@ -813,14 +898,14 @@ export default function AdminDashboard({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {submissions.length === 0 ? (
+                {submissions.filter(s => !s.status || s.status === 'approved').length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-500">
-                      No submissions found.
+                      No approved submissions found.
                     </td>
                   </tr>
                 ) : (
-                  submissions.map((sub, i) => {
+                  submissions.filter(s => !s.status || s.status === 'approved').map((sub, i) => {
                     const event = events.find(e => e.id === sub.eventId);
                     const user = users.find(u => u.id === sub.userId);
                     return (

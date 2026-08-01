@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { User } from "@/types";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { useToast } from "@/hooks/useToast";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function EditProfileModal({
   const [currPassword, setCurrPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { addToast } = useToast();
 
   React.useEffect(() => {
     if (isOpen && currentUser) {
@@ -61,7 +63,7 @@ export default function EditProfileModal({
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match.");
+      addToast("New passwords do not match.", "error");
       return;
     }
     onChangePassword(currPassword, newPassword);

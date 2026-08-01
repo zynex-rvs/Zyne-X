@@ -69,9 +69,9 @@ export default function ModeratorLoginModal({
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
-              label="Moderator Email Address"
-              type="email"
-              placeholder="moderator@zynex.edu"
+              label="Email or Register Number"
+              type="text"
+              placeholder="moderator@zynex.edu or Reg No"
               value={moderatorId}
               onChange={(e) => setModeratorId(e.target.value)}
               required

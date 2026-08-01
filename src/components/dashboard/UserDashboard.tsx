@@ -23,7 +23,7 @@ interface UserDashboardProps {
   onTransferLeadership?: (teamCode: string, newLeaderId: string) => void;
   onRemoveMember?: (teamCode: string, memberId: string) => void;
   setUsers: (users: User[]) => void;
-  onSubmitProject?: (eventId: string, projectUrl: string, description: string, teamCode?: string) => void;
+  onSubmitProject?: (eventId: string, projectUrl: string, description: string, teamCode?: string, imageBase64?: string, moderatorId?: string) => void;
 }
 
 export default function UserDashboard({
@@ -283,10 +283,9 @@ export default function UserDashboard({
                         </div>
                         <div className="flex items-center gap-2">
                           {(() => {
-                            const isToday = new Date(event.date).toDateString() === new Date().toDateString();
                             const isAllowedToSubmit = !isTeam || (isTeam && team?.leaderId === currentUser.id);
                             
-                            if (isToday && isAllowedToSubmit) {
+                            if (event.submissionEnabled && isAllowedToSubmit) {
                               return (
                                 <Button
                                   variant="primary"
@@ -485,8 +484,9 @@ export default function UserDashboard({
           isOpen={true}
           onClose={() => setSubmissionEvent(null)}
           event={submissionEvent}
-          onSubmitProject={(url, desc) => {
-            onSubmitProject(submissionEvent.id, url, desc, submissionTeamCode);
+          moderators={users.filter(u => u.role === 'moderator')}
+          onSubmitProject={(payload) => {
+            onSubmitProject(submissionEvent.id, payload.projectUrl || "", payload.description || "", submissionTeamCode, payload.imageBase64, payload.moderatorId);
             setSubmissionEvent(null);
           }}
         />

@@ -320,7 +320,7 @@ export default function Home() {
     }
     setViewMode("user-dashboard");
     setSelectedEvent(null);
-    addToast(`Welcome back, ${user.name}!`, "success");
+    addToast("Login Successfull", "success");
   };
 
   const handleSignup = async (data: any) => {
@@ -402,7 +402,7 @@ export default function Home() {
     loadDashboardData(insertedUser);
 
     setActiveModal(null);
-    addToast(`Account created successfully! Welcome, ${insertedUser.name}!`, "success");
+    addToast("Singup completed", "success");
     setViewMode("user-dashboard");
     setSelectedEvent(null);
     return true;
@@ -452,46 +452,70 @@ export default function Home() {
   };
 
   const handleModeratorLogin = async (id: string, pass: string) => {
-    const email = id.trim().toLowerCase();
+    const inputId = id.trim();
+    const isEmail = inputId.includes("@");
 
-    // Ensure only moderator emails can access this portal
-    if (!email.includes("moderator")) {
-      addToast("Access Denied: Only Moderator accounts can access this portal.", "error");
-      return;
+    if (isEmail) {
+      const email = inputId.toLowerCase();
+      if (!email.includes("moderator")) {
+        addToast("Access Denied: Only Moderator accounts can access this portal.", "error");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: pass,
+      });
+
+      if (error || !data.user) {
+        console.error("Moderator Auth login error:", error);
+        addToast("Invalid moderator credentials.", "error");
+        return;
+      }
+
+      const modUser = {
+        id: data.user.id,
+        email: data.user.email || email,
+        name: "Moderator",
+        role: "moderator",
+        regNo: "MODERATOR",
+        mobile: "",
+        department: "System",
+        year: "N/A"
+      };
+
+      setCurrentUser(modUser as User);
+      localStorage.setItem("zynex_current_user", JSON.stringify(modUser));
+      
+      // Load heavy dashboard data now that moderator is logged in
+      loadDashboardData(modUser as User);
+
+      setActiveModal(null);
+      setViewMode("moderator-dashboard");
+      setSelectedEvent(null);
+      addToast(`Moderator access granted.`, "success");
+    } else {
+      // User Moderator Auth via Reg No
+      const result = await loginUser(inputId.toUpperCase(), pass);
+      if (result.error || !result.user) {
+        addToast(result.error || "Invalid credentials.", "error");
+        return;
+      }
+
+      if (result.user.role !== "moderator") {
+        addToast("Access Denied: You do not have moderator privileges.", "error");
+        return;
+      }
+
+      setCurrentUser(result.user as User);
+      localStorage.setItem("zynex_current_user", JSON.stringify(result.user));
+      loadDashboardData(result.user as User);
+
+      setActiveModal(null);
+      setViewMode("moderator-dashboard");
+      setSelectedEvent(null);
+      addToast(`Moderator access granted. Welcome ${result.user.name}.`, "success");
     }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: pass,
-    });
-
-    if (error || !data.user) {
-      console.error("Moderator Auth login error:", error);
-      addToast("Invalid moderator credentials.", "error");
-      return;
-    }
-
-    const modUser = {
-      id: data.user.id,
-      email: data.user.email || email,
-      name: "Moderator",
-      role: "moderator",
-      regNo: "MODERATOR",
-      mobile: "",
-      department: "System",
-      year: "N/A"
-    };
-
-    setCurrentUser(modUser as User);
-    localStorage.setItem("zynex_current_user", JSON.stringify(modUser));
-    
-    // Load heavy dashboard data now that moderator is logged in
-    loadDashboardData(modUser as User);
-
-    setActiveModal(null);
-    setViewMode("moderator-dashboard");
-    setSelectedEvent(null);
-    addToast(`Moderator access granted.`, "success");
   };
 
   const handleLogout = () => {
@@ -570,7 +594,7 @@ export default function Home() {
       setSuccessModalMessage(`Successfully registered for ${currentEvent.name}!`);
       setSuccessModalSubMessage(`Your Team Code is: ${code}. You can invite members from your dashboard.`);
       setShowSuccessModal(true);
-      // Remove addToast for this success
+      addToast("Event Registration Completed", "success");
     } else {
       const { error: regErr } = await supabase.from("registrations").insert(registration);
       if (regErr) {
@@ -584,7 +608,7 @@ export default function Home() {
       setSuccessModalMessage(`Successfully registered for ${currentEvent.name}!`);
       setSuccessModalSubMessage("");
       setShowSuccessModal(true);
-      // Remove addToast for this success
+      addToast("Event Registration Completed", "success");
     }
     setActiveModal(null);
   };
@@ -714,8 +738,13 @@ export default function Home() {
         console.error("Failed to save to localStorage:", e);
       }
       addToast("Profile photo updated!", "success");
+      setCropperImage(null);
+      if (activeModal === "upload-photo") {
+        setActiveModal(null);
+      }
     } else {
       addToast("Failed to update photo.", "error");
+      setCropperImage(null);
     }
   };
 
@@ -737,21 +766,33 @@ export default function Home() {
       status: "pending"
     };
     const { data: inserted, error } = await supabase.from("enquiries").insert(enq).select().single();
+    if (error) {
+      addToast("Failed to submit contact enquiry.", "error");
+    }
     if (inserted) {
       setEnquiries([...enquiries, inserted as any]);
+      addToast("Contact Enquiry Submitted!", "success");
     }
   };
 
   // Project Submissions
-  const handleSubmitProject = async (eventId: string, projectUrl: string, description: string, teamCode?: string) => {
+  const handleSubmitProject = async (eventId: string, projectUrl: string, description: string, teamCode?: string, imageBase64?: string, moderatorId?: string) => {
     if (!currentUser) return;
+    
+    let imageUrl = undefined;
+    if (imageBase64) {
+      imageUrl = await uploadImageToCloudinary(imageBase64);
+    }
     
     const submissionData = {
       eventId,
       userId: currentUser.id,
       teamCode,
-      projectUrl,
-      description
+      projectUrl: projectUrl || undefined,
+      description: description || undefined,
+      imageUrl,
+      moderatorId: moderatorId || undefined,
+      status: moderatorId ? 'pending' : 'approved'
     };
     
     const { data: inserted, error } = await supabase.from("submissions").insert(submissionData).select().single();
@@ -837,6 +878,26 @@ export default function Home() {
     await supabase.from("notifications").delete().eq("id", id);
     setNotifications(notifications.filter((n) => (n.id as any) !== id));
     setIsNotificationsOpen(false);
+  };
+
+  const handleAppointModerator = async (userId: string) => {
+    const { error } = await supabase.from("users").update({ role: "moderator" }).eq("id", userId);
+    if (!error) {
+      setUsers(users.map(u => u.id === userId ? { ...u, role: "moderator" } : u));
+      addToast("User successfully appointed as Moderator.", "success");
+    } else {
+      addToast("Failed to appoint moderator.", "error");
+    }
+  };
+
+  const handleRevokeModerator = async (userId: string) => {
+    const { error } = await supabase.from("users").update({ role: "member" }).eq("id", userId);
+    if (!error) {
+      setUsers(users.map(u => u.id === userId ? { ...u, role: "member" } : u));
+      addToast("Moderator access revoked.", "success");
+    } else {
+      addToast("Failed to revoke moderator access.", "error");
+    }
   };
 
   const handleRejectInvite = async (id: number) => {
@@ -1083,6 +1144,8 @@ export default function Home() {
             onRespondEnquiry={handleRespondEnquiry}
             announcements={announcements}
             setAnnouncements={setAnnouncements}
+            onAppointModerator={handleAppointModerator}
+            onRevokeModerator={handleRevokeModerator}
           />
         )}
 
@@ -1093,6 +1156,9 @@ export default function Home() {
             users={users}
             teams={teams}
             eventRegistrations={eventRegistrations}
+            submissions={submissions}
+            setSubmissions={setSubmissions}
+            currentUser={currentUser}
           />
         )}
       </main>

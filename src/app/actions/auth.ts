@@ -66,7 +66,7 @@ export async function loginUser(regNo: string, pass: string) {
       .single();
 
     if (error || !user) {
-      return { error: "Invalid credentials. Please check your Register Number and password." };
+      return { error: "wrong password or wrong register number" };
     }
 
     // 2. Compare passwords
@@ -78,7 +78,7 @@ export async function loginUser(regNo: string, pass: string) {
       // Fallback for legacy plaintext passwords (only for migration purposes, remove in production!)
       // If we don't want a fallback, we just return error.
       if (pass !== user.password) {
-        return { error: "Invalid credentials. Please check your Register Number and password." };
+        return { error: "wrong password or wrong register number" };
       } else {
         console.warn("LEGACY PLAINTEXT LOGIN USED for", regNo);
       }

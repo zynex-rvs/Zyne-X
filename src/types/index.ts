@@ -33,6 +33,11 @@ export interface Event {
   registrationEndDate?: string;
   timeline?: string[];
   organizedBy?: string;
+  submissionEnabled?: boolean;
+  submissionRequiresLink?: boolean;
+  submissionRequiresImage?: boolean;
+  submissionRequiresDescription?: boolean;
+  submissionRequiresModeratorApproval?: boolean;
 }
 
 export interface Team {
@@ -110,9 +115,12 @@ export interface Submission {
   eventId: string;
   userId: string;
   teamCode?: string;
-  projectUrl: string;
+  projectUrl?: string; // made optional
   description?: string;
+  imageUrl?: string;
   submittedAt?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  moderatorId?: string;
 }
 
 export interface Winner {

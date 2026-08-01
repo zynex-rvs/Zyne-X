@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useToast } from "@/hooks/useToast";
 
 interface ImageCropperModalProps {
   imageSrc: string;
@@ -19,6 +20,7 @@ export default function ImageCropperModal({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const { addToast } = useToast();
 
   const onCropChange = (crop: { x: number; y: number }) => {
     setCrop(crop);
@@ -79,7 +81,7 @@ export default function ImageCropperModal({
       onCropComplete(base64Image);
     } catch (e) {
       console.error(e);
-      alert('Error cropping image');
+      addToast('Error cropping image', 'error');
     }
   };
 

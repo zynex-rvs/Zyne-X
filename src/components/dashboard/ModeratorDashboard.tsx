@@ -1,16 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Event, Team, Registration } from "@/types";
-import { Eye, Users, Trophy, CheckCircle, FileSpreadsheet } from "lucide-react";
+import { User, Event, Team, Registration, Submission } from "@/types";
+import { Eye, Users, Trophy, CheckCircle, FileSpreadsheet, XCircle } from "lucide-react";
 import { Button } from "../ui/Button";
+import { supabase } from "@/lib/supabaseClient";
 import AdminEventDetailsTable from "./AdminEventDetailsTable";
+import { useToast } from "@/hooks/useToast";
 
 interface ModeratorDashboardProps {
   events: Event[];
   users: User[];
   teams: Record<string, Team>;
   eventRegistrations: Record<string, Registration[]>;
+  submissions?: Submission[];
+  setSubmissions?: (val: Submission[]) => void;
+  currentUser?: User;
 }
 
 export default function ModeratorDashboard({
@@ -18,8 +23,12 @@ export default function ModeratorDashboard({
   users,
   teams,
   eventRegistrations,
+  submissions = [],
+  setSubmissions,
+  currentUser,
 }: ModeratorDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "registrations">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "registrations" | "submissions">("stats");
+  const { addToast } = useToast();
   
   const [searchTerms, setSearchTerms] = useState({
     users: "",
@@ -50,8 +59,22 @@ export default function ModeratorDashboard({
   };
 
   const exportTableData = (type: string) => {
-    alert(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`);
+    addToast(`CSV dataset for "${type}" successfully generated and copied to downloads folder.`, "success");
   };
+
+  const handleUpdateSubmissionStatus = async (submissionId: string, newStatus: 'approved' | 'rejected') => {
+    const { error } = await supabase.from('submissions').update({ status: newStatus }).eq('id', submissionId);
+    if (error) {
+      addToast(`Failed to ${newStatus} submission: ${error.message}`, "error");
+      return;
+    }
+    addToast(`Submission ${newStatus} successfully!`, "success");
+    if (setSubmissions) {
+      setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus } : s));
+    }
+  };
+
+  const pendingSubmissions = submissions.filter(s => s.moderatorId === currentUser?.id && s.status === 'pending');
 
   return (
     <div id="moderator-dashboard" className="dashboard block">
@@ -89,6 +112,19 @@ export default function ModeratorDashboard({
           }`}
         >
           Registrations
+        </button>
+        <button
+          onClick={() => setActiveTab("submissions")}
+          className={`flex-1 min-w-[120px] py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            activeTab === "submissions" ? "bg-cyan-500/20 text-cyan-400 shadow-lg border border-cyan-500/30" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Review Submissions
+          {pendingSubmissions.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full text-[10px]">
+              {pendingSubmissions.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -218,6 +254,84 @@ export default function ModeratorDashboard({
           setExpandedEventId={setExpandedEventId}
           // Intentionally omitting onDeleteTeam to keep it read-only
         />
+      )}
+
+      {/* Submissions Tab */}
+      {activeTab === "submissions" && (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6">Pending Submissions for Review</h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/5 text-xs text-white uppercase font-bold">
+                  <th className="p-3">Event</th>
+                  <th className="p-3">User / Team</th>
+                  <th className="p-3">Project Details</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingSubmissions.map((sub) => {
+                  const event = events.find((e) => e.id === sub.eventId);
+                  const user = users.find((u) => u.id === sub.userId);
+                  const team = sub.teamCode ? teams[sub.teamCode] : null;
+
+                  return (
+                    <tr key={sub.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="p-3 font-medium text-white">{event?.name || "Unknown Event"}</td>
+                      <td className="p-3">
+                        {team ? (
+                          <div className="flex flex-col">
+                            <span className="text-white font-medium">{team.teamName}</span>
+                            <span className="text-xs text-slate-400">Team Code: {team.teamCode}</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col">
+                            <span className="text-white font-medium">{user?.name}</span>
+                            <span className="text-xs text-slate-400">{user?.regNo}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3 max-w-[300px]">
+                        <div className="flex flex-col gap-1">
+                          {sub.projectUrl && (
+                            <a href={sub.projectUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline text-xs flex items-center gap-1">
+                              View Link
+                            </a>
+                          )}
+                          {sub.description && (
+                            <p className="text-xs text-slate-300 truncate" title={sub.description}>
+                              {sub.description}
+                            </p>
+                          )}
+                          {sub.imageUrl && (
+                            <a href={sub.imageUrl} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline text-xs flex items-center gap-1">
+                              View Attached Image
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="sm" variant="cyan" onClick={() => handleUpdateSubmissionStatus(sub.id, 'approved')}>
+                            <CheckCircle className="w-4 h-4 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="danger" onClick={() => handleUpdateSubmissionStatus(sub.id, 'rejected')}>
+                            <XCircle className="w-4 h-4 mr-1" /> Reject
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {pendingSubmissions.length === 0 && (
+              <p className="text-center text-slate-500 py-8">No pending submissions require your review.</p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

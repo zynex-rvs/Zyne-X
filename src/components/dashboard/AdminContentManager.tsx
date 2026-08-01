@@ -3,10 +3,11 @@
 import React, { useState, useRef } from "react";
 import { Event, Club, Administrator } from "@/types";
 import { Button } from "../ui/Button";
-import { Trash2, Edit, X, Upload, ChevronUp, ChevronDown } from "lucide-react";
+import { Trash2, Edit, X, Upload, ChevronUp, ChevronDown, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import ImageCropperModal from "../modals/ImageCropperModal";
 import { uploadImageToCloudinary } from "@/lib/uploadImage";
+import { useToast } from "@/hooks/useToast";
 
 interface AdminContentManagerProps {
   events: Event[];
@@ -39,6 +40,10 @@ export default function AdminContentManager({
   const [formData, setFormData] = useState<any>({});
   const [cropperImage, setCropperImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addToast } = useToast();
+
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [submissionConfig, setSubmissionConfig] = useState<Event | null>(null);
 
   const openModal = (mode: "add" | "edit", item?: any) => {
     setModalMode(mode);
@@ -136,11 +141,11 @@ export default function AdminContentManager({
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("events", payload);
-        if (error) { alert("Failed to add event: " + error.message); return; }
+        if (error) { addToast("Failed to add event: " + error.message, "error"); return; }
         setEvents([payload, ...events]);
       } else {
         const { error } = await safeUpsert("events", payload, editingId);
-        if (error) { alert("Failed to update event: " + error.message); return; }
+        if (error) { addToast("Failed to update event: " + error.message, "error"); return; }
         setEvents(events.map(e => e.id === editingId ? payload : e));
       }
     } else if (activeTab === "clubs") {
@@ -153,11 +158,11 @@ export default function AdminContentManager({
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("clubs", payload);
-        if (error) { alert("Failed to add club: " + error.message); return; }
+        if (error) { addToast("Failed to add club: " + error.message, "error"); return; }
         setClubs([...clubs, payload]);
       } else {
         const { error } = await safeUpsert("clubs", payload, editingId);
-        if (error) { alert("Failed to update club: " + error.message); return; }
+        if (error) { addToast("Failed to update club: " + error.message, "error"); return; }
         setClubs(clubs.map(c => c.id === editingId ? payload : c));
       }
     } else if (activeTab === "admins") {
@@ -172,11 +177,11 @@ export default function AdminContentManager({
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("administrators", payload);
-        if (error) { alert("Failed to add admin: " + error.message); return; }
+        if (error) { addToast("Failed to add admin: " + error.message, "error"); return; }
         setAdministrators([...administrators, payload]);
       } else {
         const { error } = await safeUpsert("administrators", payload, editingId);
-        if (error) { alert("Failed to update admin: " + error.message); return; }
+        if (error) { addToast("Failed to update admin: " + error.message, "error"); return; }
         setAdministrators(administrators.map(a => a.id === editingId ? payload : a));
       }
     } else if (activeTab === "nexaura-admins") {
@@ -191,11 +196,11 @@ export default function AdminContentManager({
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("nexaura_administrators", payload);
-        if (error) { alert("Failed to add Nexaura admin: " + error.message); return; }
+        if (error) { addToast("Failed to add Nexaura admin: " + error.message, "error"); return; }
         setNexauraAdministrators([...nexauraAdministrators, payload]);
       } else {
         const { error } = await safeUpsert("nexaura_administrators", payload, editingId);
-        if (error) { alert("Failed to update Nexaura admin: " + error.message); return; }
+        if (error) { addToast("Failed to update Nexaura admin: " + error.message, "error"); return; }
         setNexauraAdministrators(nexauraAdministrators.map(a => a.id === editingId ? payload : a));
       }
     } else if (activeTab === "announcements") {
@@ -208,11 +213,11 @@ export default function AdminContentManager({
 
       if (modalMode === "add") {
         const { error } = await safeUpsert("announcements", payload);
-        if (error) { alert("Failed to add announcement: " + error.message); return; }
+        if (error) { addToast("Failed to add announcement: " + error.message, "error"); return; }
         setAnnouncements([...announcements, payload]);
       } else {
         const { error } = await safeUpsert("announcements", payload, editingId);
-        if (error) { alert("Failed to update announcement: " + error.message); return; }
+        if (error) { addToast("Failed to update announcement: " + error.message, "error"); return; }
         setAnnouncements(announcements.map(a => a.id === editingId ? payload : a));
       }
     }
@@ -224,25 +229,49 @@ export default function AdminContentManager({
     if (!confirm("Are you sure you want to delete this item?")) return;
     if (activeTab === "events") {
       const { error } = await supabase.from("events").delete().eq("id", id);
-      if (error) { alert("Failed to delete event: " + error.message); return; }
+      if (error) { addToast("Failed to delete event: " + error.message, "error"); return; }
       setEvents(events.filter(e => e.id !== id));
     } else if (activeTab === "clubs") {
       const { error } = await supabase.from("clubs").delete().eq("id", id);
-      if (error) { alert("Failed to delete club: " + error.message); return; }
+      if (error) { addToast("Failed to delete club: " + error.message, "error"); return; }
       setClubs(clubs.filter(c => c.id !== id));
     } else if (activeTab === "admins") {
       const { error } = await supabase.from("administrators").delete().eq("id", id);
-      if (error) { alert("Failed to delete admin: " + error.message); return; }
+      if (error) { addToast("Failed to delete admin: " + error.message, "error"); return; }
       setAdministrators(administrators.filter(a => a.id !== id));
     } else if (activeTab === "nexaura-admins") {
       const { error } = await supabase.from("nexaura_administrators").delete().eq("id", id);
-      if (error) { alert("Failed to delete Nexaura admin: " + error.message); return; }
+      if (error) { addToast("Failed to delete Nexaura admin: " + error.message, "error"); return; }
       setNexauraAdministrators(nexauraAdministrators.filter(a => a.id !== id));
     } else if (activeTab === "announcements") {
       const { error } = await supabase.from("announcements").delete().eq("id", id);
-      if (error) { alert("Failed to delete announcement: " + error.message); return; }
+      if (error) { addToast("Failed to delete announcement: " + error.message, "error"); return; }
       setAnnouncements(announcements.filter(a => a.id !== id));
     }
+  };
+
+  const handleSaveSubmissionConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!submissionConfig) return;
+
+    const payload = {
+      submissionEnabled: submissionConfig.submissionEnabled || false,
+      submissionRequiresLink: submissionConfig.submissionRequiresLink || false,
+      submissionRequiresImage: submissionConfig.submissionRequiresImage || false,
+      submissionRequiresDescription: submissionConfig.submissionRequiresDescription || false,
+      submissionRequiresModeratorApproval: submissionConfig.submissionRequiresModeratorApproval || false,
+    };
+
+    const { error } = await supabase.from("events").update(payload).eq("id", submissionConfig.id);
+    if (error) {
+      addToast("Failed to save submission settings: " + error.message, "error");
+      return;
+    }
+
+    setEvents(events.map(ev => ev.id === submissionConfig.id ? { ...ev, ...payload } : ev));
+    setIsSubmissionModalOpen(false);
+    setSubmissionConfig(null);
+    addToast("Submission settings updated successfully", "success");
   };
 
   const handleTimelineChange = (idx: number, fieldIndex: number, value: string) => {
@@ -520,6 +549,11 @@ export default function AdminContentManager({
                     </button>
                   </>
                 )}
+                {activeTab === "events" && (
+                  <button onClick={() => { setSubmissionConfig(item); setIsSubmissionModalOpen(true); }} className="p-2 bg-indigo-500/20 text-indigo-400 rounded hover:bg-indigo-500 hover:text-white transition-colors" title="Configure Submissions">
+                    <Upload className="w-4 h-4" />
+                  </button>
+                )}
                 <button onClick={() => openModal("edit", item)} className="p-2 bg-white/10 text-white/70 rounded hover:bg-white/10 hover:text-white transition-colors">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -558,6 +592,92 @@ export default function AdminContentManager({
           onClose={() => setCropperImage(null)}
           aspect={(activeTab === "admins" || activeTab === "nexaura-admins") ? 1 : 16/9}
         />
+      )}
+
+      {isSubmissionModalOpen && submissionConfig && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md flex flex-col overflow-hidden shadow-[0_0_50px_rgba(251,191,36,0.1)]">
+            <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0 bg-transparent">
+              <h2 className="text-xl font-bold text-white capitalize">Configure Submissions</h2>
+              <button onClick={() => { setIsSubmissionModalOpen(false); setSubmissionConfig(null); }} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+              <form onSubmit={handleSaveSubmissionConfig} className="flex flex-col gap-6">
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div>
+                    <h3 className="text-white font-semibold">Enable Submissions</h3>
+                    <p className="text-xs text-slate-400">Allow users to submit projects for this event</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={submissionConfig.submissionEnabled || false}
+                      onChange={(e) => setSubmissionConfig({ ...submissionConfig, submissionEnabled: e.target.checked })}
+                    />
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+
+                <div className={`flex flex-col gap-4 transition-opacity duration-300 ${submissionConfig.submissionEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                  <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Submission Requirements</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Require Project Link</span>
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 accent-cyan-500"
+                      checked={submissionConfig.submissionRequiresLink || false}
+                      onChange={(e) => setSubmissionConfig({ ...submissionConfig, submissionRequiresLink: e.target.checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Require Project Image</span>
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 accent-cyan-500"
+                      checked={submissionConfig.submissionRequiresImage || false}
+                      onChange={(e) => setSubmissionConfig({ ...submissionConfig, submissionRequiresImage: e.target.checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Require Description</span>
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 accent-cyan-500"
+                      checked={submissionConfig.submissionRequiresDescription || false}
+                      onChange={(e) => setSubmissionConfig({ ...submissionConfig, submissionRequiresDescription: e.target.checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-2">
+                    <div>
+                      <span className="text-sm text-white font-medium block">Require Moderator Approval</span>
+                      <span className="text-xs text-slate-400">Forces user to select a moderator to review</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer"
+                        checked={submissionConfig.submissionRequiresModeratorApproval || false}
+                        onChange={(e) => setSubmissionConfig({ ...submissionConfig, submissionRequiresModeratorApproval: e.target.checked })}
+                      />
+                      <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <Button type="submit" variant="primary" className="w-full mt-4 bg-cyan-600 hover:bg-cyan-500">
+                  Save Settings
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

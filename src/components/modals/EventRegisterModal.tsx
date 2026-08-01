@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Event, User } from "@/types";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { useToast } from "@/hooks/useToast";
 
 interface EventRegisterModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export default function EventRegisterModal({
   // Team states
   const [teamName, setTeamName] = useState("");
   const [leaderName, setLeaderName] = useState(currentUser?.name || "");
+  const { addToast } = useToast();
 
   React.useEffect(() => {
     if (isOpen && currentUser) {
@@ -56,8 +58,8 @@ export default function EventRegisterModal({
     if (e) e.preventDefault();
 
     if (event.isTeamEvent) {
-      if (!teamName || !leaderName) {
-        alert("Please enter both a team name and team leader name.");
+      if (!teamName.trim() || !leaderName.trim()) {
+        addToast("Please enter both a team name and team leader name.", "error");
         return;
       }
       onRegisterSubmit({
