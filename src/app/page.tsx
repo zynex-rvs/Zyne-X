@@ -143,51 +143,115 @@ export default function Home() {
 
   // Lazy load dashboard data only when logged in or needed
   const loadDashboardData = async (userObj: User | null = currentUser) => {
-    try {
-      const [
-        { data: usersData },
-        { data: teamsData },
-        { data: regsData },
-        { data: enqData },
-        { data: notifsData },
-        { data: submissionsData }
-      ] = await Promise.all([
-        supabase.from("users").select("*"),
-        supabase.from("teams").select("*"),
-        supabase.from("registrations").select("*"),
-        supabase.from("enquiries").select("*"),
-        supabase.from("notifications").select("*"),
-        supabase.from("submissions").select("*")
-      ]);
+    if (!userObj) return;
 
-      if (usersData) {
-        setUsers(usersData);
-        if (userObj) {
+    try {
+      if (userObj.role === "admin" || userObj.role === "moderator") {
+        // Fetch ALL data for admins
+        const [
+          { data: usersData },
+          { data: teamsData },
+          { data: regsData },
+          { data: enqData },
+          { data: notifsData },
+          { data: submissionsData }
+        ] = await Promise.all([
+          supabase.from("users").select("*"),
+          supabase.from("teams").select("*"),
+          supabase.from("registrations").select("*"),
+          supabase.from("enquiries").select("*"),
+          supabase.from("notifications").select("*"),
+          supabase.from("submissions").select("*")
+        ]);
+
+        if (usersData) {
+          setUsers(usersData);
           const freshUser = usersData.find(u => u.id === userObj.id);
           if (freshUser) {
             setCurrentUser(freshUser);
           }
         }
-      }
-      if (enqData) setEnquiries(enqData);
-      if (notifsData) setNotifications(notifsData);
-      if (submissionsData) setSubmissions(submissionsData);
+        if (enqData) setEnquiries(enqData);
+        if (notifsData) setNotifications(notifsData);
+        if (submissionsData) setSubmissions(submissionsData);
 
-      if (teamsData) {
-        const teamsMap: Record<string, import("@/types").Team> = {};
-        teamsData.forEach(t => {
-          teamsMap[t.teamCode] = t;
-        });
-        setTeams(teamsMap);
-      }
+        if (teamsData) {
+          const teamsMap: Record<string, import("@/types").Team> = {};
+          teamsData.forEach(t => {
+            teamsMap[t.teamCode] = t;
+          });
+          setTeams(teamsMap);
+        }
 
-      if (regsData) {
-        const regsMap: Record<string, Registration[]> = {};
-        regsData.forEach(r => {
-          if (!regsMap[r.eventId]) regsMap[r.eventId] = [];
-          regsMap[r.eventId].push(r);
-        });
-        setEventRegistrations(regsMap);
+        if (regsData) {
+          const regsMap: Record<string, Registration[]> = {};
+          regsData.forEach(r => {
+            if (!regsMap[r.eventId]) regsMap[r.eventId] = [];
+            regsMap[r.eventId].push(r);
+          });
+          setEventRegistrations(regsMap);
+        }
+      } else {
+        // Fetch specific data for standard users to save massive egress bandwidth
+        const [
+          { data: myTeams },
+          { data: myRegs },
+          { data: myEnqs },
+          { data: myNotifs }
+        ] = await Promise.all([
+          supabase.from("teams").select("*").contains("members", [userObj.id]),
+          supabase.from("registrations").select("*").eq("userId", userObj.id),
+          supabase.from("enquiries").select("*").eq("userId", userObj.id),
+          supabase.from("notifications").select("*").eq("userId", userObj.id)
+        ]);
+
+        // Find all teammate IDs to fetch only their user profiles
+        const memberIds = new Set<string>();
+        memberIds.add(userObj.id);
+        if (myTeams) {
+          myTeams.forEach((t: import("@/types").Team) => {
+            t.members?.forEach((mId: string) => memberIds.add(mId));
+          });
+        }
+
+        // Fetch only relevant users
+        const { data: usersData } = await supabase.from("users").select("*").in("id", Array.from(memberIds));
+
+        // Fetch submissions for their teams
+        const teamCodes = myTeams ? myTeams.map((t: import("@/types").Team) => t.teamCode) : [];
+        let mySubmissions: import("@/types").Submission[] = [];
+        if (teamCodes.length > 0) {
+          const { data: subs } = await supabase.from("submissions").select("*").in("teamCode", teamCodes);
+          if (subs) mySubmissions = subs;
+        }
+
+        if (usersData) {
+          setUsers(usersData);
+          const freshUser = usersData.find(u => u.id === userObj.id);
+          if (freshUser) {
+            setCurrentUser(freshUser);
+          }
+        }
+        if (myEnqs) setEnquiries(myEnqs);
+        if (myNotifs) setNotifications(myNotifs);
+        setSubmissions(mySubmissions);
+
+        if (myTeams) {
+          const teamsMap: Record<string, import("@/types").Team> = {};
+          myTeams.forEach((t: import("@/types").Team) => {
+            teamsMap[t.teamCode] = t;
+          });
+          setTeams(teamsMap);
+        }
+
+        if (myRegs) {
+          const regsMap: Record<string, Registration[]> = {};
+          myRegs.forEach((r: any) => {
+            if (!regsMap[r.eventId]) regsMap[r.eventId] = [];
+            regsMap[r.eventId].push(r);
+          });
+          setEventRegistrations(regsMap);
+        }
       }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
